@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIPHER_NODE // VIDEO_UPLINK</title>
+    <title>CIPHER_NODE // SUPREME_CORE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -12,17 +12,18 @@
         :root { --p: #00f2ff; --bg: #0d0d0d; }
         body.theme-cyan { --p: #00f2ff; }
         body.theme-green { --p: #00ff41; }
-        body { background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; overflow: hidden; }
+        body.theme-red { --p: #ff3131; }
+        
+        body { background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; overflow: hidden; transition: 0.3s; }
         .terminal-border { border: 1px solid #333; }
         .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; }
         
-        /* Video Display Area */
-        #videoGrid { display: none; position: fixed; inset: 0; background: #000; z-index: 3000; flex-direction: column; }
-        .video-container { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        /* Video Overlay */
+        #videoGrid { display: none; position: fixed; inset: 0; background: #000; z-index: 5000; flex-direction: column; }
+        .v-box { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; background: #050505; }
         video { width: 100%; height: 100%; object-fit: cover; border: 1px solid var(--p); }
-        #localVideo { position: absolute; bottom: 80px; right: 20px; width: 120px; height: 160px; z-index: 3001; border: 2px solid var(--p); }
-        
-        .call-controls { height: 70px; display: flex; gap: 20px; align-items: center; justify-content: center; background: #050505; border-top: 1px solid #222; }
+        #localVideo { position: absolute; bottom: 100px; right: 20px; width: 100px; height: 140px; border: 2px solid var(--p); z-index: 5001; }
+        .controls { height: 80px; display: flex; gap: 15px; align-items: center; justify-content: center; background: #000; border-top: 1px solid #222; }
 
         @media (max-width: 768px) {
             #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; transition: 0.3s; width: 85%; background: #000; }
@@ -33,57 +34,69 @@
 <body class="h-screen w-screen flex flex-col theme-cyan">
 
     <div id="videoGrid">
-        <div class="video-container">
+        <div class="v-box">
             <video id="remoteVideo" autoplay playsinline></video>
             <video id="localVideo" autoplay muted playsinline></video>
         </div>
-        <div class="call-controls">
-            <button onclick="toggleMute()" id="muteBtn" class="border border-[var(--p)] px-6 py-2 text-xs font-bold">MUTE</button>
-            <button onclick="endCall()" class="bg-red-600 text-white px-6 py-2 text-xs font-bold">TERMINATE</button>
+        <div class="controls">
+            <button onclick="toggleMute()" id="muteBtn" class="border border-[var(--p)] px-4 py-2 text-[10px]">MUTE_MIC</button>
+            <button onclick="endCall()" class="bg-red-900 text-white px-6 py-2 text-[10px] font-bold">TERMINATE_LINK</button>
         </div>
     </div>
 
     <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[2000] p-4">
         <div class="terminal-border p-8 w-full max-w-sm bg-black">
-            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase">Cipher_Auth</h1>
+            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase text-center">Cipher_Gate</h1>
             <input id="email" type="email" placeholder="IDENTITY_EMAIL" class="h-input w-full p-4 mb-3">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input w-full p-4 mb-6">
-            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4">AUTHORIZE</button>
+            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4 uppercase hover:bg-white transition">Authorize</button>
         </div>
     </div>
 
-    <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0">
+    <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0 transition-opacity duration-1000">
         <aside id="sidebar" class="w-72 terminal-border flex flex-col bg-black h-full">
-            <div class="p-4 border-b border-[#222] bg-[#050505]"><p class="text-[9px] opacity-40">OPERATOR_NODE</p><p id="myUserDisplay" class="text-sm font-bold">---</p></div>
-            <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
-            <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="text-[10px] opacity-30 italic">/Logout</button></div>
+            <div class="p-4 border-b border-[#222] bg-[#050505]">
+                <p class="text-[9px] opacity-40">OPERATOR_ID</p>
+                <p id="myUserDisplay" class="text-sm font-bold">---</p>
+            </div>
+            <div class="p-3 text-[10px] opacity-30 uppercase tracking-widest mt-2 px-4">Active_Nodes</div>
+            <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-1"></div>
+            <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="text-[10px] opacity-30">/Terminate_Session</button></div>
         </aside>
 
         <main class="flex-1 flex flex-col bg-black min-w-0">
             <header class="h-14 border-b border-[#222] flex items-center justify-between px-4 bg-[#080808]">
                 <div class="flex items-center gap-2">
-                    <button onclick="toggleSidebar()" class="md:hidden border border-[#333] px-2 py-1">☰</button>
-                    <span id="activeNodeName" class="text-xs font-bold uppercase">IDLE</span>
+                    <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden border border-[#333] px-2 py-1">☰</button>
+                    <span id="activeNodeName" class="text-xs font-bold uppercase truncate">IDLE_UPLINK</span>
                 </div>
-                <button onclick="startVideoCall()" class="border border-[var(--p)] px-4 py-1 text-xs font-bold hover:bg-[var(--p)] hover:text-black">VIDEO_CALL</button>
+                <div class="flex gap-2">
+                    <button onclick="startCall(true)" class="border border-[var(--p)] px-3 py-1 text-[10px] font-bold hover:bg-[var(--p)] hover:text-black transition">VIDEO</button>
+                    <button onclick="startCall(false)" class="border border-[var(--p)] px-3 py-1 text-[10px] font-bold hover:bg-[var(--p)] hover:text-black transition">VOICE</button>
+                    <button onclick="cycleTheme()" class="border border-[#333] px-3 py-1 text-[10px] hover:border-[var(--p)]">THEME</button>
+                    <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 text-red-700 px-3 py-1 text-[10px]">WIPE_LOGS</button>
+                </div>
             </header>
+
             <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-lg"></div>
+
             <footer class="p-3 border-t border-[#222] bg-[#050505]">
                 <div class="flex gap-2">
                     <label class="h-input p-3 cursor-pointer"><i class="fas fa-camera"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
-                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="flex-1 h-input p-3">
-                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase">Exec</button>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="flex-1 h-input p-3 text-sm">
+                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase text-xs">Execute</button>
                 </div>
             </footer>
         </main>
     </div>
+
+    <audio id="remoteAudio" autoplay></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Firebase Setup (Existing Config)
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
             authDomain: "private--chat-4f6c4.firebaseapp.com",
@@ -96,14 +109,21 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_video_v1");
+        const col = collection(db, "cipher_supreme_v1");
 
         let currentUser, activeTarget, peer, localStream, currentCall;
-
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
-        window.logout = () => signOut(auth).then(() => location.reload());
-        window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
         const cleanID = (email) => email.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
+        window.logout = () => signOut(auth).then(() => location.reload());
+
+        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
+        let tIdx = 0;
+        window.cycleTheme = () => {
+            document.body.classList.remove(themes[tIdx]);
+            tIdx = (tIdx + 1) % themes.length;
+            document.body.classList.add(themes[tIdx]);
+        };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -114,40 +134,52 @@
                 
                 peer = new Peer(cleanID(user.email));
                 peer.on('call', async (call) => {
-                    if(confirm("INCOMING VIDEO LINK... AUTHORIZE?")) {
-                        localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                        document.getElementById('localVideo').srcObject = localStream;
+                    const type = call.options.metadata ? "VIDEO" : "VOICE";
+                    if(confirm(`INCOMING ${type} LINK. AUTHORIZE?`)) {
+                        localStream = await navigator.mediaDevices.getUserMedia({video: type === "VIDEO", audio: true});
+                        if(type === "VIDEO") document.getElementById('localVideo').srcObject = localStream;
                         call.answer(localStream);
-                        handleCall(call);
+                        handleCall(call, type === "VIDEO");
                     }
                 });
 
-                if (user.email === "mscmkn@mscmkn.com") loadUsers();
-                else startChat("mscmkn@mscmkn.com");
+                if (user.email === "mscmkn@mscmkn.com") {
+                    document.getElementById('wipeBtn').classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    startChat("mscmkn@mscmkn.com");
+                }
             }
         });
 
-        window.startVideoCall = async () => {
-            const targetID = cleanID(activeTarget);
-            localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-            document.getElementById('localVideo').srcObject = localStream;
-            const call = peer.call(targetID, localStream);
-            handleCall(call);
+        window.startCall = async (isVideo) => {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({video: isVideo, audio: true});
+                if(isVideo) {
+                    document.getElementById('localVideo').srcObject = localStream;
+                    document.getElementById('localVideo').style.display = 'block';
+                } else {
+                    document.getElementById('localVideo').style.display = 'none';
+                }
+                const call = peer.call(cleanID(activeTarget), localStream, {metadata: isVideo});
+                handleCall(call, isVideo);
+            } catch(e) { alert("Media access denied. Please check permissions."); }
         };
 
-        function handleCall(call) {
+        function handleCall(call, isVideo) {
             currentCall = call;
             document.getElementById('videoGrid').style.display = 'flex';
             call.on('stream', (remoteStream) => {
-                document.getElementById('remoteVideo').srcObject = remoteStream;
+                const remote = document.getElementById('remoteVideo');
+                remote.srcObject = remoteStream;
             });
-            call.on('close', () => endCall());
+            call.on('close', endCall);
         }
 
         window.toggleMute = () => {
             const enabled = localStream.getAudioTracks()[0].enabled;
             localStream.getAudioTracks()[0].enabled = !enabled;
-            document.getElementById('muteBtn').innerText = enabled ? "UNMUTE" : "MUTE";
+            document.getElementById('muteBtn').innerText = enabled ? "UNMUTE_MIC" : "MUTE_MIC";
         };
 
         window.endCall = () => {
@@ -156,7 +188,6 @@
             document.getElementById('videoGrid').style.display = 'none';
         };
 
-        // Standard Chat Functions (keep your existing ones)
         function loadUsers() {
             onSnapshot(query(col, orderBy("timestamp", "desc")), (snap) => {
                 const users = new Set();
@@ -170,7 +201,7 @@
                 users.forEach(u => {
                     if(u === "mscmkn@mscmkn.com") return;
                     const d = document.createElement('div');
-                    d.className = `p-3 text-xs border border-[#222] cursor-pointer ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
+                    d.className = `p-3 text-xs border border-[#222] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
                     d.innerText = `> ${u.toUpperCase()}`;
                     d.onclick = () => startChat(u);
                     list.appendChild(d);
@@ -190,7 +221,7 @@
                         const isMe = d.sender === currentUser.email;
                         box.innerHTML += `<div class="${isMe ? 'ml-auto text-right opacity-50' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
                             <div class="text-[9px] font-bold">[${d.sender.split('@')[0]}]</div>
-                            ${d.image ? `<img src="${d.image}" class="max-w-xs mt-2 border border-[var(--p)]" />` : `<div>${d.text}</div>`}
+                            ${d.image ? `<img src="${d.image}" class="max-w-xs mt-2 border border-[var(--p)] ml-auto mr-0" />` : `<div>${d.text}</div>`}
                         </div>`;
                     }
                 });
@@ -212,6 +243,17 @@
                 await addDoc(col, { sender: currentUser.email, recipient: activeTarget, image: reader.result, timestamp: serverTimestamp() });
             };
             if (file) reader.readAsDataURL(file);
+        };
+
+        window.wipeChat = async () => {
+            if(!confirm("DELETE ALL CONVERSATION DATA FOR THIS NODE?")) return;
+            const snap = await getDocs(query(col));
+            snap.forEach(async (d) => {
+                const data = d.data();
+                if ((data.sender === currentUser.email && data.recipient === activeTarget) || (data.sender === activeTarget && data.recipient === currentUser.email)) {
+                    await deleteDoc(doc(db, "cipher_supreme_v1", d.id));
+                }
+            });
         };
     </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CIPHER_NODE // MASTER_UPLINK</title>
+    <title>CIPHER_NODE // UPLINK_ULTRA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -16,95 +16,72 @@
         body { background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         .terminal-border { border: 1px solid #333; }
         .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; font-size: 16px; }
-        
-        /* Video Container */
         #videoGrid { display: none; position: fixed; inset: 0; background: #000; z-index: 5000; flex-direction: column; }
-        .video-wrapper { position: relative; flex: 1; background: #050505; display: flex; align-items: center; justify-content: center; }
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; }
-        #localVideo { position: absolute; bottom: 100px; right: 20px; width: 110px; height: 150px; border: 2px solid var(--p); z-index: 5001; transform: scaleX(-1); background: #222; }
-        
-        .call-controls { height: 90px; display: flex; gap: 20px; align-items: center; justify-content: center; background: #000; border-top: 1px solid #333; }
-        
-        /* Incoming Call Alert */
-        #incomingOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 6000; align-items: center; justify-content: center; flex-direction: column; text-align: center; }
-
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; transition: 0.3s; width: 85%; background: #000; }
-            #sidebar.open { left: 0; }
-        }
+        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #050505; }
+        #localVideo { position: absolute; bottom: 100px; right: 20px; width: 110px; height: 150px; border: 2px solid var(--p); z-index: 5001; transform: scaleX(-1); }
+        .controls { height: 90px; display: flex; gap: 20px; align-items: center; justify-content: center; background: #000; border-top: 1px solid #333; }
+        #incomingOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; align-items: center; justify-content: center; flex-direction: column; border: 4px solid var(--p); }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col theme-cyan">
 
     <div id="incomingOverlay">
-        <div class="terminal-border p-10 bg-black animate-pulse">
-            <h2 class="text-xl mb-4">INCOMING_UPLINK...</h2>
-            <p id="callerName" class="mb-8 text-white"></p>
-            <div class="flex gap-4">
-                <button id="acceptBtn" class="bg-[var(--p)] text-black px-8 py-3 font-bold uppercase">Authorize</button>
-                <button onclick="endCall()" class="bg-red-900 text-white px-8 py-3 font-bold uppercase">Ignore</button>
-            </div>
+        <h2 class="text-2xl mb-2 animate-pulse">INCOMING_UPLINK</h2>
+        <p id="callerName" class="mb-10 opacity-60"></p>
+        <div class="flex gap-6">
+            <button id="acceptBtn" class="bg-[var(--p)] text-black px-10 py-4 font-bold uppercase">Connect</button>
+            <button onclick="endCall()" class="bg-red-900 text-white px-10 py-4 font-bold uppercase">Reject</button>
         </div>
     </div>
 
     <div id="videoGrid">
-        <div class="video-wrapper">
+        <div class="flex-1 relative overflow-hidden">
             <video id="remoteVideo" autoplay playsinline></video>
             <video id="localVideo" autoplay muted playsinline></video>
         </div>
-        <div class="call-controls">
+        <div class="controls">
             <button onclick="toggleMute()" id="muteBtn" class="border border-[var(--p)] px-6 py-2 text-xs">MUTE</button>
-            <button onclick="endCall()" class="bg-red-900 text-white px-8 py-2 font-bold uppercase">Terminate</button>
+            <button onclick="endCall()" class="bg-red-900 text-white px-8 py-2 font-bold">TERMINATE</button>
         </div>
     </div>
 
     <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[2000] p-4">
         <div class="terminal-border p-8 w-full max-w-sm bg-black">
-            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase text-center">Cipher_Gate</h1>
-            <input id="email" type="email" placeholder="IDENTITY_EMAIL" class="h-input w-full p-4 mb-3">
+            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 text-center">Cipher_Gate</h1>
+            <input id="email" type="email" placeholder="EMAIL" class="h-input w-full p-4 mb-3">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input w-full p-4 mb-6">
             <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4 uppercase">Authorize</button>
         </div>
     </div>
 
-    <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0">
+    <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0 transition-opacity">
         <aside id="sidebar" class="w-72 terminal-border flex flex-col bg-black h-full">
-            <div class="p-4 border-b border-[#222] bg-[#050505]">
-                <p class="text-[9px] opacity-40 uppercase">Operator_Node</p>
-                <p id="myUserDisplay" class="text-sm font-bold truncate">---</p>
-            </div>
+            <div class="p-4 border-b border-[#222]"><p id="myUserDisplay" class="text-sm font-bold truncate">---</p></div>
             <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-1"></div>
-            <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="text-[10px] opacity-30 italic">/Terminate</button></div>
+            <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="text-[10px] opacity-30">/Terminate</button></div>
         </aside>
 
         <main class="flex-1 flex flex-col bg-black min-w-0">
             <header class="h-14 border-b border-[#222] flex items-center justify-between px-4 bg-[#080808]">
-                <div class="flex items-center gap-2">
-                    <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden border border-[#333] px-2 py-1">☰</button>
-                    <span id="activeNodeName" class="text-xs font-bold uppercase truncate">IDLE</span>
-                </div>
+                <span id="activeNodeName" class="text-xs font-bold uppercase">IDLE</span>
                 <div class="flex gap-2">
                     <button id="callBtn" onclick="startCall(true)" class="hidden border border-[var(--p)] px-3 py-1 text-[10px] font-bold">VIDEO</button>
-                    <button id="voiceBtn" onclick="startCall(false)" class="hidden border border-[var(--p)] px-3 py-1 text-[10px] font-bold">VOICE</button>
                     <button onclick="cycleTheme()" class="border border-[#333] px-3 py-1 text-[10px]">THEME</button>
                     <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 text-red-700 px-3 py-1 text-[10px]">WIPE</button>
                 </div>
             </header>
-            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-lg"></div>
-            <footer class="p-3 border-t border-[#222] bg-[#050505]">
-                <div class="flex gap-2">
-                    <label class="h-input p-3 cursor-pointer"><i class="fas fa-camera"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
-                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="flex-1 h-input p-3 text-sm">
-                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase text-xs">Execute</button>
-                </div>
-            </footer>
+            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
+            <footer class="p-3 border-t border-[#222]"><div class="flex gap-2">
+                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Command..." class="flex-1 h-input p-3 text-sm">
+                <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase text-xs">Exec</button>
+            </div></footer>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, setDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
@@ -118,7 +95,8 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_supreme_v5");
+        const col = collection(db, "cipher_ultra_v6");
+        const signals = collection(db, "call_signals");
         const usersCol = collection(db, "active_users");
 
         let currentUser, activeTarget, peer, localStream, currentCall;
@@ -127,40 +105,29 @@
         window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
-        let tIdx = 0;
-        window.cycleTheme = () => {
-            document.body.classList.remove(themes[tIdx]);
-            tIdx = (tIdx + 1) % themes.length;
-            document.body.classList.add(themes[tIdx]);
-        };
-
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.opacity = '1';
                 document.getElementById('myUserDisplay').innerText = user.email;
-                
                 await setDoc(doc(db, "active_users", cleanID(user.email)), { email: user.email, lastActive: serverTimestamp() });
 
-                peer = new Peer(cleanID(user.email));
+                // PEER WITH STUN SERVER (BYPASS FIREWALLS)
+                peer = new Peer(cleanID(user.email), {
+                    config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }, { 'urls': 'stun:stun1.l.google.com:19302' }]}
+                });
 
-                peer.on('call', (call) => {
-                    const overlay = document.getElementById('incomingOverlay');
-                    document.getElementById('callerName').innerText = `NODE: ${call.peer.toUpperCase()}`;
-                    overlay.style.display = 'flex';
-                    
-                    document.getElementById('acceptBtn').onclick = async () => {
-                        overlay.style.display = 'none';
-                        const isVideo = !!call.options.metadata;
-                        try {
-                            localStream = await navigator.mediaDevices.getUserMedia({video: isVideo, audio: true});
-                            if(isVideo) document.getElementById('localVideo').srcObject = localStream;
-                            call.answer(localStream);
-                            handleCall(call);
-                        } catch(e) { alert("Media Denied. Check Settings."); }
-                    };
+                peer.on('call', (call) => incomingCallUI(call));
+
+                // BACKUP SIGNALING: Listen for Firebase signals
+                onSnapshot(query(signals, where("recipient", "==", user.email)), (snap) => {
+                    snap.forEach(d => {
+                        if(d.data().status === "pending") {
+                            document.getElementById('callerName').innerText = d.data().sender;
+                            document.getElementById('incomingOverlay').style.display = 'flex';
+                        }
+                    });
                 });
 
                 loadUsers();
@@ -168,45 +135,60 @@
             }
         });
 
+        function incomingCallUI(call) {
+            const overlay = document.getElementById('incomingOverlay');
+            overlay.style.display = 'flex';
+            document.getElementById('acceptBtn').onclick = async () => {
+                overlay.style.display = 'none';
+                localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                document.getElementById('localVideo').srcObject = localStream;
+                call.answer(localStream);
+                handleCall(call);
+            };
+        }
+
         window.startCall = async (isVideo) => {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({video: isVideo, audio: true});
-                if(isVideo) document.getElementById('localVideo').srcObject = localStream;
+                document.getElementById('localVideo').srcObject = localStream;
                 document.getElementById('videoGrid').style.display = 'flex';
+                
+                // Send Signal via Firebase first
+                await addDoc(signals, { sender: currentUser.email, recipient: activeTarget, status: "pending", timestamp: serverTimestamp() });
+                
                 const call = peer.call(cleanID(activeTarget), localStream, {metadata: isVideo});
                 handleCall(call);
-            } catch(e) { alert("Enable camera/mic permissions."); }
+            } catch(e) { alert("Check Permissions!"); }
         };
 
         function handleCall(call) {
             currentCall = call;
             document.getElementById('videoGrid').style.display = 'flex';
-            
-            call.on('stream', (remoteStream) => {
-                const remoteVid = document.getElementById('remoteVideo');
-                remoteVid.srcObject = remoteStream;
-                // Aggressive play for mobile
-                remoteVid.play().catch(() => {
-                    remoteVid.muted = true; // Fallback to play if muted
-                    remoteVid.play();
-                });
+            call.on('stream', (s) => {
+                const r = document.getElementById('remoteVideo');
+                r.srcObject = s;
+                r.play().catch(() => { r.muted = true; r.play(); });
             });
-
             call.on('close', endCall);
-            call.on('error', endCall);
         }
 
-        window.endCall = () => {
+        window.endCall = async () => {
             document.getElementById('incomingOverlay').style.display = 'none';
             if(currentCall) currentCall.close();
             if(localStream) localStream.getTracks().forEach(t => t.stop());
             document.getElementById('videoGrid').style.display = 'none';
+            // Clear signals
+            const q = await getDocs(query(signals, where("recipient", "==", currentUser.email)));
+            q.forEach(async d => await deleteDoc(doc(db, "call_signals", d.id)));
         };
 
-        window.toggleMute = () => {
-            const state = localStream.getAudioTracks()[0].enabled;
-            localStream.getAudioTracks()[0].enabled = !state;
-            document.getElementById('muteBtn').innerText = state ? "UNMUTE" : "MUTE";
+        // Standard Theme and Chat Logic
+        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
+        let tIdx = 0;
+        window.cycleTheme = () => {
+            document.body.classList.remove(themes[tIdx]);
+            tIdx = (tIdx + 1) % themes.length;
+            document.body.classList.add(themes[tIdx]);
         };
 
         function loadUsers() {
@@ -229,9 +211,7 @@
             activeTarget = target;
             document.getElementById('activeNodeName').innerText = target;
             document.getElementById('callBtn').classList.remove('hidden');
-            document.getElementById('voiceBtn').classList.remove('hidden');
             if(currentUser.email === "mscmkn@mscmkn.com") document.getElementById('wipeBtn').classList.remove('hidden');
-            
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
@@ -241,7 +221,7 @@
                         const isMe = d.sender === currentUser.email;
                         box.innerHTML += `<div class="${isMe ? 'ml-auto text-right opacity-50' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
                             <div class="text-[9px] font-bold">[${d.sender.split('@')[0]}]</div>
-                            ${d.image ? `<img src="${d.image}" class="max-w-xs mt-2 border border-[var(--p)] ml-auto" />` : `<div>${d.text}</div>`}
+                            <div>${d.text}</div>
                         </div>`;
                     }
                 });
@@ -256,22 +236,13 @@
             input.value = "";
         };
 
-        window.sendImage = () => {
-            const file = document.getElementById('imgInput').files[0];
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                await addDoc(col, { sender: currentUser.email, recipient: activeTarget, image: reader.result, timestamp: serverTimestamp() });
-            };
-            if (file) reader.readAsDataURL(file);
-        };
-
         window.wipeChat = async () => {
             if(!confirm("WIPE LOGS?")) return;
             const snap = await getDocs(query(col));
             snap.forEach(async (d) => {
                 const data = d.data();
                 if ((data.sender === currentUser.email && data.recipient === activeTarget) || (data.sender === activeTarget && data.recipient === currentUser.email)) {
-                    await deleteDoc(doc(db, "cipher_supreme_v5", d.id));
+                    await deleteDoc(doc(db, "cipher_ultra_v6", d.id));
                 }
             });
         };

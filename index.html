@@ -3,75 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MSCMKN_OS // SECURE_NODE</title>
+    <title>mscmkn // GHOST_PROTOCOL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        :root { --matrix-green: #00ff41; --matrix-bg: #050505; --matrix-border: #003b00; }
-        body { background-color: var(--matrix-bg); color: var(--matrix-green); font-family: 'Share Tech Mono', monospace; }
-        .terminal-border { border: 1px solid var(--matrix-border); }
-        .terminal-input { background: #000; border: 1px solid var(--matrix-border); color: var(--matrix-green); }
-        .terminal-input:focus { border-color: var(--matrix-green); outline: none; box-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
-        .msg-entry { border-left: 2px solid var(--matrix-green); margin-bottom: 12px; padding-left: 12px; animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
-        .admin-tag { color: #fff; background: #003b00; padding: 0 4px; font-size: 10px; }
-        .scanline { position: fixed; top: 0; left: 0; width: 100%; height: 2px; background: rgba(0, 255, 65, 0.03); z-index: 100; pointer-events: none; animation: scan 8s linear infinite; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        :root {
+            --amber: #ffb000; /* Industrial Amber / Phosphor */
+            --bg: #0a0a0a;
+            --panel: #141414;
+            --border: #222222;
+        }
+        body { 
+            background-color: var(--bg); 
+            color: var(--amber); 
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.02em;
+        }
+        .terminal-ui { border: 1px solid var(--border); }
+        .amber-glow { text-shadow: 0 0 8px rgba(255, 176, 0, 0.4); }
+        .input-area { background: #000; border: 1px solid var(--border); color: var(--amber); }
+        .input-area:focus { border-color: var(--amber); outline: none; }
+        
+        /* Message Styling - Brutalist */
+        .msg-wrap { border-bottom: 1px border-transparent; padding: 4px 0; }
+        .msg-me { color: #888; } /* De-emphasize own messages for focus */
+        .msg-target { color: var(--amber); border-left: 2px solid var(--amber); padding-left: 10px; }
+        
+        /* CRT Effect */
+        .crt::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
     </style>
 </head>
-<body class="flex h-screen w-screen overflow-hidden">
-    <div class="scanline"></div>
+<body class="flex h-screen w-screen overflow-hidden crt">
 
     <div id="authOverlay" class="fixed inset-0 bg-black flex items-center justify-center z-[100]">
-        <div class="terminal-border p-10 max-w-sm w-full bg-black shadow-[0_0_30px_rgba(0,59,0,0.6)]">
-            <div class="mb-8 text-center">
-                <h1 class="text-2xl font-bold tracking-[0.3em] uppercase">Auth_Required</h1>
-                <p class="text-[9px] opacity-40 mt-2">ENCRYPTED_UPLINK_v7.2</p>
+        <div class="p-8 w-full max-w-sm border border-[#333] bg-[#0a0a0a]">
+            <div class="mb-10">
+                <h1 class="text-xl font-extrabold tracking-tighter amber-glow">LOGIN_GATE_v2.0</h1>
+                <p class="text-[9px] text-[#555] uppercase mt-1">Authorized Personnel Only</p>
             </div>
-            <div class="space-y-4">
-                <input id="email" type="email" placeholder="IDENTITY@DOMAIN.COM" class="terminal-input w-full p-3 text-xs tracking-tighter">
-                <input id="pass" type="password" placeholder="PASSKEY_DECRYPT" class="terminal-input w-full p-3 text-xs">
-                <button onclick="login()" class="w-full border border-[#00ff41] hover:bg-[#00ff41] hover:text-black p-3 font-bold transition-all uppercase text-sm tracking-widest">Connect</button>
+            <div class="space-y-2">
+                <div class="text-[10px] text-[#555]">ID_PATH:</div>
+                <input id="email" type="email" placeholder="user@mscmkn.net" class="input-area w-full p-2 text-xs">
+                <div class="text-[10px] text-[#555] mt-4">SECRET_KEY:</div>
+                <input id="pass" type="password" placeholder="********" class="input-area w-full p-2 text-xs">
+                <button onclick="login()" class="w-full bg-[#ffb000] text-black font-black py-3 mt-6 text-xs uppercase hover:bg-white transition">Initialize_Session</button>
             </div>
-            <p id="authError" class="text-red-600 text-[10px] mt-4 hidden text-center font-bold">ERROR: INVALID_CREDENTIALS</p>
+            <p id="authError" class="text-red-800 text-[10px] mt-4 hidden text-center font-bold">ERR: KEY_MISMATCH</p>
         </div>
     </div>
 
-    <aside id="sidebar" class="w-1/4 min-w-[280px] terminal-border flex flex-col hidden bg-black z-10">
-        <div class="p-5 border-b border-[#003b00]">
-            <p class="text-[9px] opacity-40 uppercase tracking-widest">Operator:</p>
-            <p id="myUserDisplay" class="text-sm font-bold text-white tracking-tighter">...</p>
+    <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col hidden bg-[#0a0a0a]">
+        <div class="p-6 border-b border-[#222]">
+            <span class="text-[9px] text-[#555] block">OPERATOR_ID</span>
+            <span id="myUserDisplay" class="text-xs font-bold text-white tracking-widest">---</span>
         </div>
-        <div class="p-3 opacity-30 text-[10px] uppercase tracking-[0.2em] px-5 mt-4 italic">Active_Nodes</div>
-        <div id="userList" class="flex-1 overflow-y-auto px-3 space-y-2 mt-2">
+        <div id="userList" class="flex-1 overflow-y-auto p-4 space-y-1">
             </div>
-        <div class="p-4 border-t border-[#003b00]">
-            <button onclick="logout()" class="w-full text-[10px] border border-red-900 text-red-700 hover:bg-red-900 hover:text-white transition py-2">/TERMINATE_SESSION</button>
+        <div class="p-4 bg-[#0e0e0e]">
+            <button onclick="logout()" class="text-[9px] text-[#555] hover:text-white uppercase">/TERMINATE</button>
         </div>
     </aside>
 
-    <main id="chatMain" class="flex-1 flex flex-col hidden bg-black relative">
-        <header class="h-14 border-b border-[#003b00] flex items-center px-8 justify-between bg-black/80">
-            <div class="flex items-center gap-4">
-                <span class="text-xs font-bold tracking-[0.2em]" id="activeNodeName">INITIALIZING...</span>
-                <span id="typingIndicator" class="text-[9px] italic opacity-0 transition-opacity">Target is typing...</span>
+    <main id="chatMain" class="flex-1 flex flex-col hidden bg-[#0a0a0a]">
+        <header class="h-14 border-b border-[#222] flex items-center justify-between px-6">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 bg-[#ffb000] rounded-full animate-pulse shadow-[0_0_5px_#ffb000]"></div>
+                <span id="activeNodeName" class="text-xs font-bold tracking-tighter uppercase">READY_FOR_LINK</span>
             </div>
-            <div class="flex items-center gap-4">
-                <span class="text-[9px] opacity-40 hidden md:inline">STRATUM: SECURE_P2P</span>
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            </div>
+            <span class="text-[10px] text-[#444]">P2P_STREAMS_ACTIVE</span>
         </header>
 
-        <div id="chatBox" class="flex-1 overflow-y-auto p-8 space-y-2 text-sm">
-            <p class="opacity-20 text-[10px] tracking-widest text-center mb-10">--- SESSION_START: ${new Date().toISOString()} ---</p>
+        <div id="chatBox" class="flex-1 overflow-y-auto p-8 space-y-4 text-xs leading-relaxed">
+            <div class="text-[#333] mb-10">[System] Uplink established. Waiting for packets...</div>
         </div>
 
-        <footer class="p-5 border-t border-[#003b00] bg-black">
-            <div class="flex gap-3 items-center">
-                <span class="text-[#00ff41] font-bold opacity-50">&gt;_</span>
-                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="ENTER_COMMAND..." class="flex-1 bg-transparent border-none outline-none text-sm text-[#00ff41] placeholder:opacity-20">
-                <button onclick="sendText()" class="px-5 py-1 text-[10px] border border-[#00ff41] hover:bg-[#00ff41] hover:text-black transition uppercase font-bold">Execute</button>
+        <footer class="p-6 border-t border-[#222]">
+            <div class="flex gap-4">
+                <span class="text-[#333]">&gt;</span>
+                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Enter command or message..." class="flex-1 bg-transparent border-none outline-none text-xs text-[#ffb000] placeholder:text-[#222]">
+                <button onclick="sendText()" class="text-[10px] text-[#555] hover:text-[#ffb000] font-bold uppercase transition">Send_Data</button>
             </div>
         </footer>
     </main>
@@ -81,7 +95,6 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Your specific Firebase credentials
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
             authDomain: "private--chat-4f6c4.firebaseapp.com",
@@ -94,45 +107,38 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "terminal_logs");
+        const col = collection(db, "comms_v2");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
 
-        // Login Function
         window.login = () => {
             const email = document.getElementById('email').value.trim();
             const pass = document.getElementById('pass').value;
-            signInWithEmailAndPassword(auth, email, pass).catch((err) => {
-                console.error(err);
+            signInWithEmailAndPassword(auth, email, pass).catch(() => {
                 document.getElementById('authError').classList.remove('hidden');
             });
         };
 
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        // MAIN LOGIC: Identifying the Admin
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('authOverlay').classList.add('hidden');
                 document.getElementById('chatMain').classList.remove('hidden');
-                document.getElementById('myUserDisplay').innerText = user.email.toUpperCase();
+                document.getElementById('myUserDisplay').innerText = user.email.split('@')[0].toUpperCase();
                 
-                // ADMIN LOGIC CHECK
                 if (user.email === "mscmkn@mscmkn.com") {
                     document.getElementById('sidebar').classList.remove('hidden');
-                    document.getElementById('activeNodeName').innerText = "SYSTEM: ROOT_ACCESS";
-                    loadAdminDashboard();
+                    loadAdminList();
                 } else {
-                    // Regular User logic: Auto-connect to you
                     startChat("mscmkn@mscmkn.com");
                 }
             }
         });
 
-        // For Admin: Load unique senders into the sidebar
-        function loadAdminDashboard() {
+        function loadAdminList() {
             onSnapshot(query(col, orderBy("timestamp", "desc")), (snap) => {
                 const targets = new Set();
                 snap.forEach(d => {
@@ -140,44 +146,35 @@
                     if(data.sender !== "mscmkn@mscmkn.com") targets.add(data.sender);
                     if(data.recipient !== "mscmkn@mscmkn.com") targets.add(data.recipient);
                 });
-                
                 const list = document.getElementById('userList');
                 list.innerHTML = "";
                 targets.forEach(t => {
                     if (t === "mscmkn@mscmkn.com") return;
                     const div = document.createElement('div');
-                    div.className = `p-3 text-[11px] border border-transparent hover:border-[#00ff41] cursor-pointer mb-1 transition flex justify-between items-center ${activeTarget === t ? 'bg-[#003b00] border-[#00ff41]' : ''}`;
-                    div.innerHTML = `<span>> [NODE]: ${t.split('@')[0].toUpperCase()}</span><span class="text-[8px] opacity-30">ONLINE</span>`;
+                    div.className = `p-2 text-[10px] border border-[#222] cursor-pointer mb-1 hover:border-[#ffb000] transition ${activeTarget === t ? 'bg-[#ffb000] text-black font-bold' : ''}`;
+                    div.innerHTML = `NOD_${t.split('@')[0].toUpperCase()}`;
                     div.onclick = () => startChat(t);
                     list.appendChild(div);
                 });
             });
         }
 
-        // Initialize Chat Stream
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = `UPLINK_TO: ${target.split('@')[0].toUpperCase()}`;
-            
+            document.getElementById('activeNodeName').innerText = `NODE:// ${target.split('@')[0].toUpperCase()}`;
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
-                box.innerHTML = '<p class="opacity-10 text-[9px] tracking-widest text-center mb-10">--- LOG_STREAM_RECOVERED ---</p>';
+                box.innerHTML = '<div class="text-[#333] mb-4 uppercase">[Logs recovered]</div>';
                 snap.forEach(doc => {
                     const d = doc.data();
-                    // FILTER: Show only messages between the logged-in user and the selected target
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || 
                         (d.sender === activeTarget && d.recipient === currentUser.email)) {
-                        
                         const isMe = d.sender === currentUser.email;
+                        const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}) : '';
                         box.innerHTML += `
-                            <div class="msg-entry ${isMe ? 'opacity-60 border-green-900' : 'text-white'}">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[9px] uppercase tracking-tighter ${isMe ? 'text-gray-500' : 'text-green-400 font-bold'}">
-                                        [${d.sender.split('@')[0]}]
-                                    </span>
-                                    ${d.sender === "mscmkn@mscmkn.com" ? '<span class="admin-tag">ADMIN</span>' : ''}
-                                </div>
-                                <div class="text-[13px] leading-relaxed break-words">${d.text}</div>
+                            <div class="msg-wrap ${isMe ? 'msg-me' : 'msg-target'}">
+                                <span class="text-[9px] font-bold">[${time}] [${d.sender.split('@')[0].toUpperCase()}]:</span>
+                                <span class="ml-2">${d.text}</span>
                             </div>`;
                     }
                 });
@@ -185,18 +182,11 @@
             });
         }
 
-        // Send Message
         window.sendText = async () => {
             const input = document.getElementById('msgInput');
             const val = input.value.trim();
-            if(!val || !currentUser) return;
-
-            await addDoc(col, {
-                sender: currentUser.email,
-                recipient: activeTarget,
-                text: val,
-                timestamp: serverTimestamp()
-            });
+            if(!val) return;
+            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: val, timestamp: serverTimestamp() });
             input.value = "";
         };
     </script>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIPHER_NODE // VOICE_FIX</title>
+    <title>CIPHER_NODE // VIDEO_UPLINK</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -14,12 +14,15 @@
         body.theme-green { --p: #00ff41; }
         body { background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         .terminal-border { border: 1px solid #333; }
-        .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; font-size: 16px; }
+        .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; }
         
-        /* Voice Active UI */
-        #voicePanel { display: none; background: #000; border: 2px solid var(--p); padding: 15px; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; width: 90%; max-width: 400px; text-align: center; }
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        /* Video Display Area */
+        #videoGrid { display: none; position: fixed; inset: 0; background: #000; z-index: 3000; flex-direction: column; }
+        .video-container { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        video { width: 100%; height: 100%; object-fit: cover; border: 1px solid var(--p); }
+        #localVideo { position: absolute; bottom: 80px; right: 20px; width: 120px; height: 160px; z-index: 3001; border: 2px solid var(--p); }
+        
+        .call-controls { height: 70px; display: flex; gap: 20px; align-items: center; justify-content: center; background: #050505; border-top: 1px solid #222; }
 
         @media (max-width: 768px) {
             #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; transition: 0.3s; width: 85%; background: #000; }
@@ -29,29 +32,29 @@
 </head>
 <body class="h-screen w-screen flex flex-col theme-cyan">
 
-    <div id="voicePanel">
-        <div class="blink text-xs mb-3 font-bold uppercase">Uplink_Active // Decrypting_Voice</div>
-        <div class="flex justify-center gap-4">
-            <button onclick="toggleMute()" id="muteBtn" class="border border-[var(--p)] px-4 py-2 text-xs">MUTE</button>
-            <button onclick="endCall()" class="bg-red-600 text-white px-4 py-2 text-xs font-bold">DISCONNECT</button>
+    <div id="videoGrid">
+        <div class="video-container">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <video id="localVideo" autoplay muted playsinline></video>
+        </div>
+        <div class="call-controls">
+            <button onclick="toggleMute()" id="muteBtn" class="border border-[var(--p)] px-6 py-2 text-xs font-bold">MUTE</button>
+            <button onclick="endCall()" class="bg-red-600 text-white px-6 py-2 text-xs font-bold">TERMINATE</button>
         </div>
     </div>
 
     <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[2000] p-4">
         <div class="terminal-border p-8 w-full max-w-sm bg-black">
-            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase text-center">Cipher_Gate</h1>
+            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase">Cipher_Auth</h1>
             <input id="email" type="email" placeholder="IDENTITY_EMAIL" class="h-input w-full p-4 mb-3">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input w-full p-4 mb-6">
-            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4 uppercase">Authorize</button>
+            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4">AUTHORIZE</button>
         </div>
     </div>
 
     <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0">
         <aside id="sidebar" class="w-72 terminal-border flex flex-col bg-black h-full">
-            <div class="p-4 border-b border-[#222] bg-[#050505]">
-                <p class="text-[9px] opacity-40">OPERATOR_NODE</p>
-                <p id="myUserDisplay" class="text-sm font-bold">---</p>
-            </div>
+            <div class="p-4 border-b border-[#222] bg-[#050505]"><p class="text-[9px] opacity-40">OPERATOR_NODE</p><p id="myUserDisplay" class="text-sm font-bold">---</p></div>
             <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
             <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="text-[10px] opacity-30 italic">/Logout</button></div>
         </aside>
@@ -62,14 +65,9 @@
                     <button onclick="toggleSidebar()" class="md:hidden border border-[#333] px-2 py-1">☰</button>
                     <span id="activeNodeName" class="text-xs font-bold uppercase">IDLE</span>
                 </div>
-                <div class="flex gap-2">
-                    <button onclick="startVoiceCall()" class="border border-[var(--p)] px-4 py-1 text-xs font-bold hover:bg-[var(--p)] hover:text-black">CALL</button>
-                    <button onclick="cycleTheme()" class="text-[9px] border border-[#333] px-2 py-1">THEME</button>
-                </div>
+                <button onclick="startVideoCall()" class="border border-[var(--p)] px-4 py-1 text-xs font-bold hover:bg-[var(--p)] hover:text-black">VIDEO_CALL</button>
             </header>
-
             <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-lg"></div>
-
             <footer class="p-3 border-t border-[#222] bg-[#050505]">
                 <div class="flex gap-2">
                     <label class="h-input p-3 cursor-pointer"><i class="fas fa-camera"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
@@ -80,13 +78,12 @@
         </main>
     </div>
 
-    <audio id="remoteAudio" autoplay></audio>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // Firebase Setup (Existing Config)
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
             authDomain: "private--chat-4f6c4.firebaseapp.com",
@@ -99,19 +96,13 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_voice_final");
+        const col = collection(db, "cipher_video_v1");
 
-        let currentUser = null;
-        let activeTarget = "mscmkn@mscmkn.com";
-        let peer;
-        let localStream;
-        let currentCall;
+        let currentUser, activeTarget, peer, localStream, currentCall;
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
         window.logout = () => signOut(auth).then(() => location.reload());
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
-
-        // FIXED ID CLEANER
         const cleanID = (email) => email.toLowerCase().replace(/[^a-z0-9]/g, "");
 
         onAuthStateChanged(auth, (user) => {
@@ -121,17 +112,13 @@
                 document.getElementById('mainUI').style.opacity = '1';
                 document.getElementById('myUserDisplay').innerText = user.email.split('@')[0];
                 
-                // Initialize Peer with Clean ID
                 peer = new Peer(cleanID(user.email));
-
                 peer.on('call', async (call) => {
-                    if(confirm("INCOMING VOICE LINK FROM " + call.peer + ". ACCEPT?")) {
-                        try {
-                            localStream = await navigator.mediaDevices.getUserMedia({audio: true});
-                            call.answer(localStream);
-                            currentCall = call;
-                            handleCall(call);
-                        } catch(e) { alert("Mic Access Denied."); }
+                    if(confirm("INCOMING VIDEO LINK... AUTHORIZE?")) {
+                        localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                        document.getElementById('localVideo').srcObject = localStream;
+                        call.answer(localStream);
+                        handleCall(call);
                     }
                 });
 
@@ -140,24 +127,22 @@
             }
         });
 
+        window.startVideoCall = async () => {
+            const targetID = cleanID(activeTarget);
+            localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+            document.getElementById('localVideo').srcObject = localStream;
+            const call = peer.call(targetID, localStream);
+            handleCall(call);
+        };
+
         function handleCall(call) {
-            document.getElementById('voicePanel').style.display = 'block';
+            currentCall = call;
+            document.getElementById('videoGrid').style.display = 'flex';
             call.on('stream', (remoteStream) => {
-                document.getElementById('remoteAudio').srcObject = remoteStream;
+                document.getElementById('remoteVideo').srcObject = remoteStream;
             });
             call.on('close', () => endCall());
         }
-
-        window.startVoiceCall = async () => {
-            try {
-                const targetID = cleanID(activeTarget);
-                localStream = await navigator.mediaDevices.getUserMedia({audio: true});
-                const call = peer.call(targetID, localStream);
-                currentCall = call;
-                handleCall(call);
-                alert("Requesting Connection to: " + targetID);
-            } catch(e) { alert("Microphone required for calls."); }
-        };
 
         window.toggleMute = () => {
             const enabled = localStream.getAudioTracks()[0].enabled;
@@ -167,11 +152,11 @@
 
         window.endCall = () => {
             if(currentCall) currentCall.close();
-            if(localStream) localStream.getTracks().forEach(track => track.stop());
-            document.getElementById('voicePanel').style.display = 'none';
+            if(localStream) localStream.getTracks().forEach(t => t.stop());
+            document.getElementById('videoGrid').style.display = 'none';
         };
 
-        // Standard Functions
+        // Standard Chat Functions (keep your existing ones)
         function loadUsers() {
             onSnapshot(query(col, orderBy("timestamp", "desc")), (snap) => {
                 const users = new Set();

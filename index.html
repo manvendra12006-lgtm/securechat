@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIPHER_NODE // mscmkn</title>
+    <title>CIPHER_NODE // ACCESS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
@@ -12,89 +12,74 @@
         body.theme-cyan { --p: #00f2ff; }
         body.theme-green { --p: #00ff41; }
         body.theme-red { --p: #ff3131; }
-        body.theme-purple { --p: #bc13fe; }
-
-        body { 
-            background: var(--bg); color: var(--p); 
-            font-family: 'Courier Prime', monospace; 
-            overflow: hidden; 
-        }
-
-        /* Fixed Brutalist Layout from Image */
-        .terminal-box { border: 1px solid #333; background: #000; }
-        .inner-border { border: 1px solid #222; }
-        .h-input { background: #050505; border: 1px solid #333; color: var(--p); font-size: 16px; }
-        .h-input:focus { border-color: var(--p); outline: none; }
         
-        /* Image Box with Icon Overlay */
-        .img-wrapper { position: relative; border: 1px solid var(--p); padding: 4px; background: #000; display: inline-block; }
-        .img-overlay-icon { 
-            position: absolute; top: 8px; left: 8px; 
-            background: var(--p); color: #000; 
-            padding: 2px 6px; font-size: 10px; font-weight: bold; 
-        }
+        body { background: var(--bg); color: var(--p); font-family: 'Courier Prime', monospace; }
 
-        /* Message Styling */
-        .msg-container { border-left: 1px solid #222; padding-left: 15px; margin-bottom: 24px; }
-        .msg-header { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; opacity: 0.6; }
-        .msg-text { font-size: 18px; line-height: 1.4; }
+        /* Match the Image Style */
+        .terminal-border { border: 1px solid #333; }
+        .inner-container { border: 1px solid #222; background: #000; }
+        .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; }
+        .h-input:focus { border-color: var(--p); }
+        
+        /* Image Node Style from Picture */
+        .img-node { position: relative; border: 1px solid var(--p); background: #000; display: inline-block; padding: 4px; }
+        .img-tag { position: absolute; top: 0; left: 0; background: var(--p); color: #000; font-size: 10px; font-weight: bold; padding: 2px 5px; z-index: 10; }
 
-        /* Sidebar Styling */
-        .node-btn { border: 1px solid #222; margin-bottom: 4px; padding: 10px; cursor: pointer; font-size: 12px; }
-        .node-btn:hover { border-color: var(--p); }
-        .node-active { border-color: var(--p); background: rgba(0, 242, 255, 0.05); }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col p-4 theme-cyan">
+<body class="h-screen w-screen flex flex-col p-4 theme-cyan overflow-hidden">
 
-    <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[200]">
-        <div class="terminal-box p-10 w-full max-w-sm">
-            <h1 class="text-2xl font-bold mb-8 tracking-widest border-b border-gray-800 pb-2">CIPHER_NODE</h1>
-            <div class="space-y-4">
-                <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full p-3">
-                <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full p-3">
-                <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-3 uppercase text-sm">Connect</button>
+    <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[500]">
+        <div class="terminal-border p-8 w-full max-w-sm bg-black">
+            <div class="flex items-center gap-2 mb-6">
+                <div class="w-3 h-3 bg-[var(--p)] rounded-full"></div>
+                <h1 class="text-xl font-bold tracking-widest uppercase">CIPHER_NODE</h1>
             </div>
-            <p id="authError" class="text-red-600 text-[10px] mt-4 hidden">ERR_AUTH_FAILURE</p>
+            <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full p-3 mb-3 text-sm">
+            <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full p-3 mb-6 text-sm">
+            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-3 uppercase text-sm hover:brightness-110">Connect</button>
+            <p id="authError" class="text-red-500 text-[10px] mt-4 hidden">ERR: CONNECTION_REJECTED</p>
         </div>
     </div>
 
-    <div class="flex flex-1 gap-4 overflow-hidden">
-        <aside id="sidebar" class="w-64 terminal-box hidden flex-col">
-            <div class="p-4 border-b border-gray-800 bg-[#050505]">
-                <p class="text-[10px] opacity-40">MASTER_NODE</p>
-                <p id="myUserDisplay" class="font-bold text-sm">---</p>
+    <div id="mainUI" class="flex flex-1 gap-4 opacity-0 transition-opacity duration-500">
+        <aside class="w-64 terminal-border flex flex-col bg-black">
+            <div class="p-4 border-b border-[#222] flex items-center gap-3">
+                <i class="fas fa-user-secret"></i>
+                <span id="myUserDisplay" class="text-xs font-bold uppercase">---</span>
             </div>
-            <div id="userList" class="flex-1 overflow-y-auto p-4">
-                </div>
-            <div class="p-4 border-t border-gray-800">
-                <button onclick="logout()" class="text-[10px] opacity-30 hover:opacity-100 italic">/Logout</button>
+            <div class="p-2 text-[9px] opacity-40 uppercase tracking-widest px-4 mt-2">USER_LIST</div>
+            <div id="userList" class="flex-1 overflow-y-auto px-2 space-y-1"></div>
+            <div class="p-4 border-t border-[#222]">
+                <button onclick="logout()" class="text-[10px] opacity-30 hover:opacity-100 uppercase italic">/Terminate</button>
             </div>
         </aside>
 
-        <main id="chatMain" class="flex-1 terminal-box hidden flex-col">
-            <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-[#050505]">
-                <div class="flex items-center gap-4">
-                    <div class="w-2 h-2 rounded-full bg-[var(--p)]"></div>
-                    <span id="activeNodeName" class="text-xs font-bold tracking-widest uppercase italic">Idle_Link</span>
-                </div>
+        <main class="flex-1 terminal-border flex flex-col bg-black">
+            <header class="h-12 border-b border-[#222] flex items-center justify-between px-6 bg-[#080808]">
                 <div class="flex items-center gap-3">
-                    <button onclick="cycleTheme()" class="text-[10px] border border-gray-800 px-3 py-1 hover:border-[var(--p)]">THEME</button>
-                    <button id="wipeBtn" onclick="wipeChat()" class="hidden text-[10px] border border-red-900 text-red-700 px-3 py-1 hover:bg-red-900 hover:text-white">WIPE_LOG</button>
+                    <i class="fas fa-satellite-dish text-[10px]"></i>
+                    <span id="activeNodeName" class="text-xs font-bold tracking-tighter uppercase">IDLE_LINK</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="cycleTheme()" class="text-[9px] border border-[#333] px-2 py-1 hover:border-[var(--p)]">THEME</button>
+                    <button id="wipeBtn" onclick="wipeChat()" class="hidden text-[9px] border border-red-900 text-red-700 px-2 py-1 hover:bg-red-900 hover:text-white">WIPE_LOG</button>
                 </div>
             </header>
 
-            <div id="chatBox" class="flex-1 overflow-y-auto p-8">
-                </div>
+            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-sm"></div>
 
-            <footer class="p-6 border-t border-gray-800 bg-[#050505]">
-                <div class="flex gap-4 items-center">
-                    <label class="h-input cursor-pointer p-3 px-5 hover:bg-[var(--p)] hover:text-black transition">
+            <footer class="p-4 border-t border-[#222] bg-[#080808]">
+                <div class="flex gap-3">
+                    <label class="h-input p-3 px-5 cursor-pointer hover:bg-[var(--p)] hover:text-black transition flex items-center">
                         <i class="fas fa-camera"></i>
                         <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
                     </label>
-                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="msg_input : msnd_Text" class="flex-1 h-input p-3">
-                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-8 py-3 font-bold uppercase text-sm">Exec</button>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="msg_input : msnd_Text" class="flex-1 h-input p-3 text-sm">
+                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-8 py-3 font-bold uppercase text-xs">EXEC</button>
                 </div>
             </footer>
         </main>
@@ -117,16 +102,21 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_node_v4");
+        const col = collection(db, "cipher_vFinal");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(() => document.getElementById('authError').classList.remove('hidden'));
+        window.login = () => {
+            const e = document.getElementById('email').value.trim();
+            const p = document.getElementById('pass').value;
+            signInWithEmailAndPassword(auth, e, p).catch(() => document.getElementById('authError').classList.remove('hidden'));
+        };
+
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        // THEME ENGINE
-        const themes = ['theme-cyan', 'theme-green', 'theme-red', 'theme-purple'];
+        // Theme cycle
+        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
         let tIdx = 0;
         window.cycleTheme = () => {
             document.body.classList.remove(themes[tIdx]);
@@ -137,45 +127,43 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                // IMMEDIATELY REVEAL UI
                 document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('sidebar').classList.add('flex');
-                document.getElementById('chatMain').classList.add('flex');
-                document.getElementById('myUserDisplay').innerText = user.email.split('@')[0].toUpperCase();
+                document.getElementById('mainUI').style.opacity = '1';
+                document.getElementById('myUserDisplay').innerText = user.email.split('@')[0];
                 
                 if (user.email === "mscmkn@mscmkn.com") {
                     document.getElementById('wipeBtn').classList.remove('hidden');
-                    loadAdminList();
+                    loadUsers();
                 } else {
                     startChat("mscmkn@mscmkn.com");
                 }
             }
         });
 
-        function loadAdminList() {
+        function loadUsers() {
             onSnapshot(query(col, orderBy("timestamp", "desc")), (snap) => {
-                const targets = new Set();
+                const users = new Set();
                 snap.forEach(d => {
                     const data = d.data();
-                    if(data.sender !== "mscmkn@mscmkn.com") targets.add(data.sender);
-                    if(data.recipient !== "mscmkn@mscmkn.com") targets.add(data.recipient);
+                    if(data.sender !== "mscmkn@mscmkn.com") users.add(data.sender);
+                    if(data.recipient !== "mscmkn@mscmkn.com") users.add(data.recipient);
                 });
                 const list = document.getElementById('userList');
                 list.innerHTML = "";
-                targets.forEach(t => {
-                    if (t === "mscmkn@mscmkn.com") return;
-                    const div = document.createElement('div');
-                    div.className = `node-btn ${activeTarget === t ? 'node-active' : ''}`;
-                    div.innerText = `[NODE] ${t.split('@')[0].toUpperCase()}`;
-                    div.onclick = () => startChat(t);
-                    list.appendChild(div);
+                users.forEach(u => {
+                    if(u === "mscmkn@mscmkn.com") return;
+                    const d = document.createElement('div');
+                    d.className = `p-3 text-[11px] border border-[#222] cursor-pointer hover:border-[var(--p)] mb-1 ${activeTarget === u ? 'bg-[#002b2e] border-[var(--p)]' : ''}`;
+                    d.innerText = `> ${u.split('@')[0].toUpperCase()}`;
+                    d.onclick = () => startChat(u);
+                    list.appendChild(d);
                 });
             });
         }
 
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = `Active_Node // ${target.split('@')[0]}`;
+            document.getElementById('activeNodeName').innerText = `NODE: ${target.split('@')[0].toUpperCase()}`;
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
@@ -185,14 +173,9 @@
                         (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
                         box.innerHTML += `
-                            <div class="msg-container ${isMe ? 'opacity-40' : 'text-white'}">
-                                <div class="msg-header">${d.sender.split('@')[0]}</div>
-                                ${d.image ? `
-                                    <div class="img-wrapper mt-2">
-                                        <div class="img-overlay-icon"><i class="fas fa-camera"></i> IMG_NODE</div>
-                                        <img src="${d.image}" class="max-w-xs border border-gray-900" />
-                                    </div>` 
-                                    : `<div class="msg-text">${d.text}</div>`}
+                            <div class="${isMe ? 'opacity-40' : 'text-white border-l-2 border-[var(--p)] pl-4'}">
+                                <div class="text-[9px] uppercase font-bold mb-1">[${d.sender.split('@')[0]}]</div>
+                                ${d.image ? `<div class="img-node"><div class="img-tag"><i class="fas fa-camera"></i> IMG_DATA</div><img src="${d.image}" class="max-w-[280px] block" /></div>` : `<div>${d.text}</div>`}
                             </div>`;
                     }
                 });
@@ -217,13 +200,13 @@
         };
 
         window.wipeChat = async () => {
-            if(!confirm("Destroy Node Logs?")) return;
+            if(!confirm("DESTROY LOGS?")) return;
             const snap = await getDocs(query(col));
             snap.forEach(async (d) => {
                 const data = d.data();
                 if ((data.sender === currentUser.email && data.recipient === activeTarget) || 
                     (data.sender === activeTarget && data.recipient === currentUser.email)) {
-                    await deleteDoc(doc(db, "cipher_node_v4", d.id));
+                    await deleteDoc(doc(db, "cipher_vFinal", d.id));
                 }
             });
         };

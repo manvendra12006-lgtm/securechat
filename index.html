@@ -3,77 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITAN_NODE // mscmkn</title>
+    <title>CIPHER_NODE // TERMINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #00ff41; --bg: #050505; }
+        :root { --p: #00f2ff; --bg: #0d0d0d; }
+        body.theme-cyan { --p: #00f2ff; }
+        body.theme-green { --p: #00ff41; }
+        body.theme-red { --p: #ff3131; }
+        body.theme-purple { --p: #bc13fe; }
+
         body { 
             background: var(--bg); color: var(--p); 
             font-family: 'Courier Prime', monospace; 
-            font-size: 18px; /* Increased base size */
+            overflow: hidden; 
         }
-        .h-border { border: 2px solid #111; }
-        .h-input { background: #000; border: 2px solid #222; color: var(--p); font-size: 20px; padding: 12px; }
+
+        /* REAL MOTION GRAPHICS: CRT EFFECT */
+        .crt::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 100; background-size: 100% 2px, 3px 100%; pointer-events: none;
+        }
+        
+        /* MOVING SCANLINE */
+        .scanline {
+            width: 100%; height: 100px; z-index: 101; background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(0, 0, 0, 0) 100%);
+            opacity: 0.1; position: absolute; bottom: 100%; animation: scan 8s linear infinite;
+        }
+        @keyframes scan { to { bottom: -100px; } }
+
+        .terminal-box { border: 1px solid #333; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
+        .h-input { background: transparent; border: 1px solid #333; color: var(--p); }
         .h-input:focus { border-color: var(--p); outline: none; }
-        .msg-line { border-left: 3px solid #111; padding-left: 15px; margin-bottom: 20px; }
-        .admin-view { border-left-color: var(--p); }
-        .img-preview { max-width: 300px; border: 1px solid var(--p); margin-top: 10px; filter: grayscale(1) contrast(1.2); }
-        /* Larger buttons for touch/mobile */
-        button { cursor: pointer; text-transform: uppercase; font-weight: bold; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-thumb { background: #222; }
+        
+        /* IMAGE OVERLAY ICON */
+        .img-container { position: relative; display: inline-block; border: 1px solid var(--p); padding: 5px; background: #000; }
+        .img-icon { position: absolute; top: 10px; left: 10px; background: var(--p); color: black; padding: 2px 6px; font-size: 12px; font-weight: bold; }
+
+        .sidebar-item { border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
+        .sidebar-item:hover { border-color: var(--p); background: rgba(255,255,255,0.05); }
+        .active-node { border-color: var(--p); background: rgba(0, 242, 255, 0.1); }
     </style>
 </head>
-<body class="flex h-screen w-screen overflow-hidden">
+<body class="crt h-screen w-screen flex flex-col p-4 theme-cyan">
+    <div class="scanline"></div>
 
-    <div id="authOverlay" class="fixed inset-0 bg-black flex flex-col items-center justify-center z-[110] p-6">
-        <div class="w-full max-w-lg">
-            <h1 class="text-4xl font-bold mb-8 border-b-4 border-[var(--p)] pb-2 uppercase tracking-tighter">System_Login</h1>
-            <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full mb-4">
-            <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full mb-6">
-            <button onclick="login()" class="w-full bg-[var(--p)] text-black py-4 text-xl">Initialize_Uplink</button>
-            <p id="authError" class="text-red-500 mt-4 hidden">AUTH_ERR: INVALID_KEY</p>
+    <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[200]">
+        <div class="terminal-box p-8 w-80 bg-black">
+            <h2 class="text-xl font-bold mb-6 tracking-widest uppercase border-b border-gray-800 pb-2">Cipher_Node</h2>
+            <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full p-2 mb-3 text-sm">
+            <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full p-2 mb-6 text-sm">
+            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-2 uppercase hover:opacity-80">Connect</button>
         </div>
     </div>
 
-    <aside id="sidebar" class="w-80 h-border flex flex-col hidden bg-black">
-        <div class="p-6 border-b-2 border-[#111]">
-            <p class="text-xs opacity-50 uppercase">Master_Node</p>
-            <p id="myUserDisplay" class="text-xl font-bold">---</p>
-        </div>
-        <div id="userList" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
-        <button onclick="logout()" class="p-4 text-xs opacity-30 hover:opacity-100">/Terminate</button>
-    </aside>
-
-    <main id="chatMain" class="flex-1 flex flex-col hidden">
-        <header class="h-20 h-border flex items-center justify-between px-8 bg-black">
-            <div>
-                <span id="activeNodeName" class="text-2xl font-bold uppercase tracking-tight">Idle_Link</span>
+    <div class="flex flex-1 gap-4">
+        <aside id="sidebar" class="w-72 terminal-box hidden flex-col bg-black overflow-hidden">
+            <div class="p-4 border-b border-gray-800 flex items-center gap-3">
+                <i class="fas fa-microchip"></i>
+                <span id="myUserDisplay" class="text-xs font-bold uppercase">---</span>
             </div>
-            <div id="adminTools" class="hidden">
-                <button onclick="wipeCurrentChat()" class="bg-red-900 text-white text-xs px-4 py-2 hover:bg-red-600 transition">Wipe_Log</button>
-            </div>
-        </header>
+            <div class="p-2 text-[10px] opacity-40 uppercase">User_List</div>
+            <div id="userList" class="flex-1 overflow-y-auto px-2 space-y-1"></div>
+            <button onclick="logout()" class="p-4 text-[10px] opacity-30 hover:opacity-100 text-left">/Terminate</button>
+        </aside>
 
-        <div id="chatBox" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
+        <main id="chatMain" class="flex-1 terminal-box hidden flex-col bg-black">
+            <header class="h-12 border-b border-gray-800 flex items-center justify-between px-4 text-xs font-bold">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-circle text-[8px] animate-pulse"></i>
+                    <span id="activeNodeName">Idle_Link</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="cycleTheme()" class="border border-gray-800 px-2 py-1 hover:border-[var(--p)] transition">THEME</button>
+                    <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 px-2 py-1 text-red-700 hover:bg-red-900 hover:text-white">WIPE_LOG</button>
+                </div>
+            </header>
 
-        <footer class="p-6 h-border bg-black">
-            <div class="flex gap-4">
-                <label class="h-input cursor-pointer flex items-center justify-center px-6 hover:bg-[#111]">
+            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-sm"></div>
+
+            <footer class="p-4 border-t border-gray-800 flex gap-3 items-center">
+                <label class="h-input px-4 py-2 cursor-pointer hover:bg-[var(--p)] hover:text-black transition">
                     <i class="fas fa-camera"></i>
                     <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
                 </label>
-                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type Message..." class="flex-1 h-input">
-                <button onclick="sendText()" class="px-8 border-2 border-[var(--p)] hover:bg-[var(--p)] hover:text-black transition">Execute</button>
-            </div>
-        </footer>
-    </main>
+                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="msg_input: msnd_Text" class="flex-1 h-input p-2">
+                <button onclick="sendText()" class="px-6 py-2 bg-[var(--p)] text-black font-bold uppercase">Exec</button>
+            </footer>
+        </main>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
@@ -87,28 +112,33 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "titan_logs");
+        const col = collection(db, "cipher_v3");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
 
-        window.login = () => {
-            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(() => {
-                document.getElementById('authError').classList.remove('hidden');
-            });
-        };
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
         window.logout = () => signOut(auth).then(() => location.reload());
+
+        // THEME CYCLER
+        const themes = ['theme-cyan', 'theme-green', 'theme-red', 'theme-purple'];
+        let tIdx = 0;
+        window.cycleTheme = () => {
+            document.body.classList.remove(themes[tIdx]);
+            tIdx = (tIdx + 1) % themes.length;
+            document.body.classList.add(themes[tIdx]);
+        };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('authOverlay').classList.add('hidden');
-                document.getElementById('chatMain').classList.remove('hidden');
+                document.getElementById('authOverlay').style.display = 'none';
+                document.getElementById('sidebar').classList.add('flex');
+                document.getElementById('chatMain').classList.add('flex');
                 document.getElementById('myUserDisplay').innerText = user.email.split('@')[0];
                 
                 if (user.email === "mscmkn@mscmkn.com") {
-                    document.getElementById('sidebar').classList.remove('hidden');
-                    document.getElementById('adminTools').classList.remove('hidden');
+                    document.getElementById('wipeBtn').classList.remove('hidden');
                     loadAdminList();
                 } else {
                     startChat("mscmkn@mscmkn.com");
@@ -129,7 +159,7 @@
                 targets.forEach(t => {
                     if (t === "mscmkn@mscmkn.com") return;
                     const div = document.createElement('div');
-                    div.className = `p-4 border-2 border-[#111] cursor-pointer hover:border-[var(--p)] text-xl font-bold ${activeTarget === t ? 'border-[var(--p)] bg-[#0a220a]' : ''}`;
+                    div.className = `p-3 text-[11px] sidebar-item ${activeTarget === t ? 'active-node' : ''}`;
                     div.innerText = `> ${t.split('@')[0].toUpperCase()}`;
                     div.onclick = () => startChat(t);
                     list.appendChild(div);
@@ -139,7 +169,7 @@
 
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = `Uplink: ${target.split('@')[0]}`;
+            document.getElementById('activeNodeName').innerText = `Active Node: ${target.split('@')[0]}`;
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
@@ -149,9 +179,9 @@
                         (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
                         box.innerHTML += `
-                            <div class="msg-line ${isMe ? 'opacity-40' : 'admin-view'}">
-                                <span class="text-xs font-bold">[${d.sender.split('@')[0].toUpperCase()}]:</span><br>
-                                ${d.image ? `<img src="${d.image}" class="img-preview" />` : `<span class="text-2xl">${d.text}</span>`}
+                            <div class="${isMe ? 'opacity-40' : 'text-white border-l-2 border-[var(--p)] pl-3'}">
+                                <span class="text-[9px] font-bold uppercase">[${d.sender.split('@')[0]}]:</span><br>
+                                ${d.image ? `<div class="img-container mt-2"><div class="img-icon"><i class="fas fa-camera"></i> IMG</div><img src="${d.image}" class="max-w-[250px]" /></div>` : d.text}
                             </div>`;
                     }
                 });
@@ -166,7 +196,6 @@
             input.value = "";
         };
 
-        // NEW: IMAGE AS TEXT (Base64) - NO STORAGE NEEDED
         window.sendImage = () => {
             const file = document.getElementById('imgInput').files[0];
             const reader = new FileReader();
@@ -176,19 +205,17 @@
             if (file) reader.readAsDataURL(file);
         };
 
-        // NEW: WIPE LOG (Admin Only)
-        window.wipeCurrentChat = async () => {
-            if(!confirm("Destroy communication logs for this node?")) return;
-            const q = query(col);
-            const snap = await getDocs(q);
+        window.wipeChat = async () => {
+            if(!confirm("Destroy Node Logs?")) return;
+            const snap = await getDocs(query(col));
             snap.forEach(async (d) => {
                 const data = d.data();
                 if ((data.sender === currentUser.email && data.recipient === activeTarget) || 
                     (data.sender === activeTarget && data.recipient === currentUser.email)) {
-                    await deleteDoc(doc(db, "titan_logs", d.id));
+                    await deleteDoc(doc(db, "cipher_v3", d.id));
                 }
             });
-        }
+        };
     </script>
 </body>
 </html>

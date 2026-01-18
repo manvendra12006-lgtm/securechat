@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIPHER_NODE // RESPONSIVE</title>
+    <title>CIPHER_NODE // VOICE_ENABLE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -13,39 +13,26 @@
         body.theme-green { --p: #00ff41; }
         body.theme-red { --p: #ff3131; }
         
-        body { 
-            background: var(--bg); 
-            color: var(--p); 
-            font-family: 'Share Tech Mono', monospace; 
-            overflow: hidden;
-        }
-
+        body { background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         .terminal-border { border: 1px solid #333; }
         .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; font-size: 16px; }
-        
-        /* RESPONSIVE SIDEBAR LOGIC */
+
         @media (max-width: 768px) {
-            #sidebar {
-                position: fixed;
-                left: -100%;
-                top: 0;
-                bottom: 0;
-                z-index: 1000;
-                transition: 0.3s ease-in-out;
-                width: 85%;
-                background: #000;
-            }
+            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; transition: 0.3s; width: 85%; background: #000; }
             #sidebar.open { left: 0; }
             .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; }
             .overlay.active { display: block; }
         }
 
-        /* Image Node Scale */
+        .call-btn { border: 1px solid var(--p); background: rgba(0, 242, 255, 0.1); padding: 5px 12px; font-size: 12px; cursor: pointer; }
+        .call-btn:hover { background: var(--p); color: #000; }
+        
+        .msg-container { margin-bottom: 20px; max-width: 90%; }
         .img-node { position: relative; border: 2px solid var(--p); background: #000; display: inline-block; padding: 4px; }
         .img-tag { position: absolute; top: -12px; left: 10px; background: var(--p); color: #000; font-size: 10px; font-weight: bold; padding: 1px 6px; }
 
-        .msg-text { font-size: 18px; line-height: 1.4; word-wrap: break-word; }
-        .msg-container { margin-bottom: 20px; max-width: 95%; }
+        /* Call Invite Styling */
+        .call-invite { border: 2px dashed var(--p); padding: 15px; background: #050505; color: var(--p); text-align: center; }
         
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #222; }
@@ -68,25 +55,21 @@
         
         <aside id="sidebar" class="w-64 md:w-72 terminal-border flex flex-col bg-black h-full">
             <div class="p-4 border-b border-[#222] flex justify-between items-center bg-[#050505]">
-                <div>
-                    <p class="text-[9px] opacity-40">OPERATOR</p>
-                    <p id="myUserDisplay" class="text-sm font-bold truncate">---</p>
-                </div>
+                <div><p class="text-[9px] opacity-40">OPERATOR</p><p id="myUserDisplay" class="text-sm font-bold truncate">---</p></div>
                 <button onclick="toggleSidebar()" class="md:hidden text-xl p-2">&times;</button>
             </div>
             <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
-            <div class="p-4 border-t border-[#222]">
-                <button onclick="logout()" class="text-[10px] opacity-30 italic uppercase">/Terminate_Session</button>
-            </div>
+            <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="text-[10px] opacity-30 italic">/Terminate</button></div>
         </aside>
 
         <main class="flex-1 flex flex-col bg-black min-w-0">
             <header class="h-14 border-b border-[#222] flex items-center justify-between px-4 bg-[#080808]">
-                <div class="flex items-center gap-3">
-                    <button onclick="toggleSidebar()" class="md:hidden text-lg border border-[#333] px-3 py-1 mr-2">☰</button>
-                    <span id="activeNodeName" class="text-xs font-bold tracking-tighter uppercase truncate">IDLE</span>
+                <div class="flex items-center gap-2">
+                    <button onclick="toggleSidebar()" class="md:hidden border border-[#333] px-2 py-1">☰</button>
+                    <span id="activeNodeName" class="text-xs font-bold truncate uppercase">IDLE</span>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 items-center">
+                    <button onclick="startVoiceCall()" class="call-btn"><i class="fas fa-phone-alt"></i> CALL</button>
                     <button onclick="cycleTheme()" class="text-[9px] border border-[#333] px-2 py-1">THEME</button>
                     <button id="wipeBtn" onclick="wipeChat()" class="hidden text-[9px] border border-red-900 text-red-700 px-2 py-1">WIPE</button>
                 </div>
@@ -94,14 +77,11 @@
 
             <div id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6"></div>
 
-            <footer class="p-3 md:p-4 border-t border-[#222] bg-[#050505]">
-                <div class="flex gap-2 items-center">
-                    <label class="h-input p-3 cursor-pointer hover:bg-[var(--p)] hover:text-black transition">
-                        <i class="fas fa-camera"></i>
-                        <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
-                    </label>
-                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="msg_input..." class="flex-1 h-input p-3">
-                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-4 md:px-8 py-3 font-bold text-xs">EXEC</button>
+            <footer class="p-3 border-t border-[#222] bg-[#050505]">
+                <div class="flex gap-2">
+                    <label class="h-input p-3 cursor-pointer hover:bg-[var(--p)]"><i class="fas fa-camera"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Broadcast message..." class="flex-1 h-input p-3">
+                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-4 py-3 font-bold text-xs">EXEC</button>
                 </div>
             </footer>
         </main>
@@ -124,19 +104,14 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_responsive_v1");
+        const col = collection(db, "cipher_call_v1");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
         window.logout = () => signOut(auth).then(() => location.reload());
-
-        // Toggle Sidebar for Mobile
-        window.toggleSidebar = () => {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('mobileOverlay').classList.toggle('active');
-        };
+        window.toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobileOverlay').classList.toggle('active'); };
 
         const themes = ['theme-cyan', 'theme-green', 'theme-red'];
         let tIdx = 0;
@@ -152,15 +127,24 @@
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.opacity = '1';
                 document.getElementById('myUserDisplay').innerText = user.email.split('@')[0];
-                
-                if (user.email === "mscmkn@mscmkn.com") {
-                    document.getElementById('wipeBtn').classList.remove('hidden');
-                    loadUsers();
-                } else {
-                    startChat("mscmkn@mscmkn.com");
-                }
+                if (user.email === "mscmkn@mscmkn.com") { document.getElementById('wipeBtn').classList.remove('hidden'); loadUsers(); } 
+                else { startChat("mscmkn@mscmkn.com"); }
             }
         });
+
+        // GENERATE CALL LINK
+        window.startVoiceCall = async () => {
+            const roomID = `cipher-${Math.random().toString(36).substring(7)}`;
+            const callLink = `https://meet.jit.si/${roomID}`;
+            await addDoc(col, { 
+                sender: currentUser.email, 
+                recipient: activeTarget, 
+                isCall: true,
+                link: callLink,
+                timestamp: serverTimestamp() 
+            });
+            window.open(callLink, '_blank');
+        };
 
         function loadUsers() {
             onSnapshot(query(col, orderBy("timestamp", "desc")), (snap) => {
@@ -175,7 +159,7 @@
                 users.forEach(u => {
                     if(u === "mscmkn@mscmkn.com") return;
                     const d = document.createElement('div');
-                    d.className = `p-3 text-xs border border-[#222] cursor-pointer hover:border-[var(--p)] mb-1 ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
+                    d.className = `p-3 text-xs border border-[#222] cursor-pointer mb-1 ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
                     d.innerText = `> ${u.split('@')[0].toUpperCase()}`;
                     d.onclick = () => { startChat(u); if(window.innerWidth < 768) toggleSidebar(); };
                     list.appendChild(d);
@@ -194,16 +178,22 @@
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || 
                         (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
-                        box.innerHTML += `
-                            <div class="msg-container ${isMe ? 'ml-auto text-right opacity-60' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
-                                <div class="text-[9px] uppercase mb-1">[${d.sender.split('@')[0]}]</div>
-                                ${d.image ? `
-                                    <div class="img-node">
-                                        <div class="img-tag"><i class="fas fa-camera"></i> PKT_IMG</div>
-                                        <img src="${d.image}" class="max-w-full md:max-w-xs block" />
-                                    </div>` 
-                                    : `<div class="msg-text">${d.text}</div>`}
-                            </div>`;
+                        
+                        if(d.isCall) {
+                            box.innerHTML += `
+                                <div class="w-full flex ${isMe ? 'justify-end' : 'justify-start'}">
+                                    <div class="call-invite">
+                                        <p class="text-[10px] mb-2 font-bold uppercase">Incoming encrypted Voice Link</p>
+                                        <a href="${d.link}" target="_blank" class="bg-[var(--p)] text-black px-4 py-2 font-bold text-xs">JOIN_CALL</a>
+                                    </div>
+                                </div>`;
+                        } else {
+                            box.innerHTML += `
+                                <div class="${isMe ? 'ml-auto text-right opacity-60' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
+                                    <div class="text-[9px] uppercase mb-1">[${d.sender.split('@')[0]}]</div>
+                                    ${d.image ? `<div class="img-node"><div class="img-tag">PKT_IMG</div><img src="${d.image}" class="max-w-xs block" /></div>` : `<div>${d.text}</div>`}
+                                </div>`;
+                        }
                     }
                 });
                 box.scrollTop = box.scrollHeight;
@@ -231,9 +221,8 @@
             const snap = await getDocs(query(col));
             snap.forEach(async (d) => {
                 const data = d.data();
-                if ((data.sender === currentUser.email && data.recipient === activeTarget) || 
-                    (data.sender === activeTarget && data.recipient === currentUser.email)) {
-                    await deleteDoc(doc(db, "cipher_responsive_v1", d.id));
+                if ((data.sender === currentUser.email && data.recipient === activeTarget) || (data.sender === activeTarget && data.recipient === currentUser.email)) {
+                    await deleteDoc(doc(db, "cipher_call_v1", d.id));
                 }
             });
         };

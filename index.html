@@ -3,119 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secure Channel to MSCMKN</title>
+    <title>Secure Channel | mscmkn</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #0b141a; color: #e9edef; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
+        .chat-bg { 
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
+            background-blend-mode: overlay; 
+            background-color: #0b141a; 
+            background-repeat: repeat;
+        }
+        .message-in { background-color: #202c33; align-self: flex-start; border-radius: 0 12px 12px 12px; border: 1px solid #2f3b44; }
+        .message-out { background-color: #005c4b; align-self: flex-end; border-radius: 12px 0 12px 12px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #374045; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-[#202c33] p-3 px-5 flex items-center justify-between shadow-lg z-10">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-inner">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div>
+                <h1 class="font-semibold text-sm">mscmkn <span class="text-[10px] bg-green-900 text-green-300 px-1 rounded ml-1">E2EE</span></h1>
+                <p class="text-[11px] text-[#8696a0]">Private Cybersecurity Channel</p>
+            </div>
+        </div>
+        <div class="flex gap-5 text-[#aebac1]">
+            <i class="fas fa-lock text-xs opacity-50"></i>
+            <i class="fas fa-ellipsis-v cursor-pointer"></i>
+        </div>
+    </header>
+
+    <div class="bg-[#111b21] p-2 flex gap-2 border-b border-[#222d34] items-center">
+        <div class="relative w-1/3">
+            <i class="fas fa-user absolute left-2 top-2.5 text-[10px] text-gray-500"></i>
+            <input id="userInput" type="text" placeholder="Your Name" class="bg-[#2a3942] text-xs p-2 pl-6 rounded w-full outline-none focus:ring-1 ring-blue-500">
+        </div>
+        <div class="relative w-2/3">
+            <i class="fas fa-key absolute left-2 top-2.5 text-[10px] text-yellow-600"></i>
+            <input id="keyInput" type="password" placeholder="Enter Encryption Key" class="bg-[#2a3942] text-xs p-2 pl-6 rounded w-full outline-none focus:ring-1 ring-green-500">
+        </div>
+    </div>
+
+    <div id="chatBox" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 chat-bg">
+        <div class="mx-auto bg-[#182229] border border-yellow-900/30 text-[#ffd279] text-[10px] py-1.5 px-4 rounded-lg shadow-sm text-center max-w-[80%]">
+            <i class="fas fa-shield-alt mr-1"></i> THIS CHAT IS END-TO-END ENCRYPTED. NO DATA LEAVES THIS DEVICE IN PLAINTEXT.
+        </div>
+    </div>
+
+    <footer class="bg-[#202c33] p-3 flex items-center gap-3">
+        <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 bg-[#2a3942] p-2.5 px-5 rounded-full outline-none text-sm placeholder:text-[#8696a0]">
+        <button onclick="sendMessage()" class="bg-[#00a884] hover:bg-[#008f6f] w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-md">
+            <i class="fas fa-paper-plane text-white text-sm"></i>
+        </button>
+    </footer>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // 1. YOUR FIREBASE CONFIG
         const firebaseConfig = {
-           apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
-  authDomain: "private--chat-4f6c4.firebaseapp.com",
-  projectId: "private--chat-4f6c4",
-  storageBucket: "private--chat-4f6c4.firebasestorage.app",
-  messagingSenderId: "754573371275",
-  appId: "1:754573371275:web:6dee9b502ef3ededbc718e",
-  measurementId: "G-FCSJRYHNND"
+            apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
+            authDomain: "private--chat-4f6c4.firebaseapp.com",
+            projectId: "private--chat-4f6c4",
+            storageBucket: "private--chat-4f6c4.firebasestorage.app",
+            messagingSenderId: "754573371275",
+            appId: "1:754573371275:web:6dee9b502ef3ededbc718e",
+            measurementId: "G-FCSJRYHNND"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const messagesCol = collection(db, "secure_chats");
+        const messagesCol = collection(db, "chats_secure");
 
-        // --- CRYPTO UTILITIES ---
-        async function deriveKey(passphrase) {
-            const encoder = new TextEncoder();
-            const keyMaterial = await crypto.subtle.importKey(
-                "raw", encoder.encode(passphrase), "PBKDF2", false, ["deriveKey"]
-            );
+        async function getCryptoKey(passphrase) {
+            const enc = new TextEncoder();
+            const material = await crypto.subtle.importKey("raw", enc.encode(passphrase), "PBKDF2", false, ["deriveKey"]);
             return crypto.subtle.deriveKey(
-                { name: "PBKDF2", salt: encoder.encode("static-salt"), iterations: 100000, hash: "SHA-256" },
-                keyMaterial,
-                { name: "AES-GCM", length: 256 },
-                false, ["encrypt", "decrypt"]
+                { name: "PBKDF2", salt: enc.encode("mscmkn-static-salt-v1"), iterations: 100000, hash: "SHA-256" },
+                material, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
             );
         }
 
-        async function encryptMsg(text, key) {
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const encoded = new TextEncoder().encode(text);
-            const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
-            return {
-                iv: btoa(String.fromCharCode(...iv)),
-                data: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
-            };
-        }
-
-        async function decryptMsg(encryptedObj, key) {
-            try {
-                const iv = new Uint8Array(atob(encryptedObj.iv).split("").map(c => c.charCodeAt(0)));
-                const data = new Uint8Array(atob(encryptedObj.data).split("").map(c => c.charCodeAt(0)));
-                const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, data);
-                return new TextDecoder().decode(decrypted);
-            } catch (e) { return "[Decryption Failed - Check Key]"; }
-        }
-
-        // --- UI LOGIC ---
         window.sendMessage = async () => {
-            const msgInput = document.getElementById('msgInput');
-            const keyInput = document.getElementById('keyInput');
-            const user = document.getElementById('userInput').value || "Guest";
-            
-            if (!msgInput.value || !keyInput.value) return alert("Enter message and Room Key");
+            const text = document.getElementById('msgInput').value;
+            const pass = document.getElementById('keyInput').value;
+            const sender = document.getElementById('userInput').value || "Guest";
+            if (!text || !pass) return;
 
-            const cryptoKey = await deriveKey(keyInput.value);
-            const encrypted = await encryptMsg(msgInput.value, cryptoKey);
+            try {
+                const key = await getCryptoKey(pass);
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(text));
 
-            await addDoc(messagesCol, {
-                sender: user,
-                recipient: "mscmkn",
-                payload: encrypted,
-                timestamp: serverTimestamp()
-            });
-            msgInput.value = "";
+                await addDoc(messagesCol, {
+                    sender,
+                    payload: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
+                    iv: btoa(String.fromCharCode(...iv)),
+                    timestamp: serverTimestamp()
+                });
+                document.getElementById('msgInput').value = "";
+            } catch (e) { console.error("Encryption failed:", e); }
         };
 
-        // Listen for messages
-        const q = query(messagesCol, orderBy("timestamp", "asc"));
-        onSnapshot(q, (snapshot) => {
-            const chatBox = document.getElementById('chatBox');
-            chatBox.innerHTML = "";
-            snapshot.forEach(async (doc) => {
-                const data = doc.data();
-                const keyInput = document.getElementById('keyInput').value;
-                let displayMsg = "...";
-
-                if (keyInput) {
-                    const cryptoKey = await deriveKey(keyInput);
-                    displayMsg = await decryptMsg(data.payload, cryptoKey);
-                } else {
-                    displayMsg = "[Locked - Enter Room Key]";
+        onSnapshot(query(messagesCol, orderBy("timestamp", "asc")), (snap) => {
+            const box = document.getElementById('chatBox');
+            box.innerHTML = '<div class="mx-auto bg-[#182229] border border-yellow-900/30 text-[#ffd279] text-[10px] py-1.5 px-4 rounded-lg shadow-sm text-center max-w-[80%] mb-4"><i class="fas fa-shield-alt mr-1"></i> THIS CHAT IS END-TO-END ENCRYPTED. NO DATA LEAVES THIS DEVICE IN PLAINTEXT.</div>';
+            
+            snap.forEach(async d => {
+                const data = d.data();
+                const pass = document.getElementById('keyInput').value;
+                let display = "●●●●●●●";
+                
+                if (pass) {
+                    try {
+                        const key = await getCryptoKey(pass);
+                        const dec = await crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: new Uint8Array(atob(data.iv).split("").map(c => c.charCodeAt(0))) },
+                            key, new Uint8Array(atob(data.payload).split("").map(c => c.charCodeAt(0)))
+                        );
+                        display = new TextDecoder().decode(dec);
+                    } catch(e) { display = "[Decryption Locked]"; }
                 }
 
-                chatBox.innerHTML += `<div class="mb-2"><strong>${data.sender}:</strong> <span class="bg-gray-100 p-1 rounded">${displayMsg}</span></div>`;
+                const isMe = data.sender.toLowerCase() === "mscmkn";
+                const time = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "";
+                
+                const html = `
+                    <div class="max-w-[85%] min-w-[120px] p-2 px-3 shadow-md relative ${isMe ? 'message-out' : 'message-in'}">
+                        <div class="text-[10px] font-bold mb-1 ${isMe ? 'text-green-300' : 'text-blue-400'}">${data.sender}</div>
+                        <div class="text-[13px] leading-relaxed break-words pr-8">${display}</div>
+                        <div class="text-[9px] text-[#8696a0] absolute bottom-1 right-2 flex items-center gap-1">
+                            ${time} ${isMe ? '<i class="fas fa-check-double text-blue-400"></i>' : ''}
+                        </div>
+                    </div>`;
+                box.innerHTML += html;
+                box.scrollTop = box.scrollHeight;
             });
         });
     </script>
-</head>
-<body class="bg-slate-900 text-white font-sans p-5">
-    <div class="max-w-md mx-auto bg-slate-800 p-6 rounded-lg shadow-xl">
-        <h2 class="text-xl font-bold mb-4 border-b border-slate-700 pb-2">Secure Channel: @mscmkn</h2>
-        
-        <div class="space-y-3 mb-4">
-            <input id="userInput" type="text" placeholder="Your Name" class="w-full p-2 rounded bg-slate-700 border-none outline-none focus:ring-2 ring-blue-500 text-sm">
-            <input id="keyInput" type="password" placeholder="Room Encryption Key" class="w-full p-2 rounded bg-slate-700 border-none outline-none focus:ring-2 ring-green-500 text-sm">
-        </div>
-
-        <div id="chatBox" class="h-64 overflow-y-auto bg-slate-950 p-3 rounded mb-4 text-xs font-mono text-green-400">
-            </div>
-
-        <div class="flex gap-2">
-            <input id="msgInput" type="text" placeholder="Message mscmkn..." class="flex-1 p-2 rounded bg-slate-700 border-none text-sm">
-            <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded font-bold">Send</button>
-        </div>
-        <p class="text-[10px] mt-4 text-slate-500 text-center">AES-GCM End-to-End Encrypted. Firebase only stores ciphertext.</p>
-    </div>
 </body>
 </html>

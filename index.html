@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIPHER_NODE // DIRECT_VOICE</title>
+    <title>CIPHER_NODE // VOICE_FIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -14,10 +14,10 @@
         body.theme-green { --p: #00ff41; }
         body { background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         .terminal-border { border: 1px solid #333; }
-        .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; }
+        .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; font-size: 16px; }
         
         /* Voice Active UI */
-        #voiceStatus { display: none; background: var(--p); color: #000; padding: 10px; font-weight: bold; text-align: center; font-size: 12px; }
+        #voicePanel { display: none; background: #000; border: 2px solid var(--p); padding: 15px; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 3000; width: 90%; max-width: 400px; text-align: center; }
         .blink { animation: blinker 1s linear infinite; }
         @keyframes blinker { 50% { opacity: 0; } }
 
@@ -29,21 +29,27 @@
 </head>
 <body class="h-screen w-screen flex flex-col theme-cyan">
 
-    <div id="voiceStatus" class="blink">VOICE_UPLINK_ESTABLISHED // DIRECT_PEER_CONNECTION</div>
+    <div id="voicePanel">
+        <div class="blink text-xs mb-3 font-bold uppercase">Uplink_Active // Decrypting_Voice</div>
+        <div class="flex justify-center gap-4">
+            <button onclick="toggleMute()" id="muteBtn" class="border border-[var(--p)] px-4 py-2 text-xs">MUTE</button>
+            <button onclick="endCall()" class="bg-red-600 text-white px-4 py-2 text-xs font-bold">DISCONNECT</button>
+        </div>
+    </div>
 
     <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[2000] p-4">
         <div class="terminal-border p-8 w-full max-w-sm bg-black">
-            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2">CIPHER_AUTH</h1>
-            <input id="email" type="email" placeholder="NODE_ID" class="h-input w-full p-4 mb-3">
+            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase text-center">Cipher_Gate</h1>
+            <input id="email" type="email" placeholder="IDENTITY_EMAIL" class="h-input w-full p-4 mb-3">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input w-full p-4 mb-6">
-            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4">INITIALIZE</button>
+            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4 uppercase">Authorize</button>
         </div>
     </div>
 
     <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0">
         <aside id="sidebar" class="w-72 terminal-border flex flex-col bg-black h-full">
             <div class="p-4 border-b border-[#222] bg-[#050505]">
-                <p class="text-[9px] opacity-40">OPERATOR</p>
+                <p class="text-[9px] opacity-40">OPERATOR_NODE</p>
                 <p id="myUserDisplay" class="text-sm font-bold">---</p>
             </div>
             <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
@@ -57,18 +63,18 @@
                     <span id="activeNodeName" class="text-xs font-bold uppercase">IDLE</span>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="startVoiceCall()" class="border border-[var(--p)] px-3 py-1 text-xs hover:bg-[var(--p)] hover:text-black">CALL</button>
+                    <button onclick="startVoiceCall()" class="border border-[var(--p)] px-4 py-1 text-xs font-bold hover:bg-[var(--p)] hover:text-black">CALL</button>
                     <button onclick="cycleTheme()" class="text-[9px] border border-[#333] px-2 py-1">THEME</button>
                 </div>
             </header>
 
-            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-sm"></div>
+            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-lg"></div>
 
             <footer class="p-3 border-t border-[#222] bg-[#050505]">
                 <div class="flex gap-2">
                     <label class="h-input p-3 cursor-pointer"><i class="fas fa-camera"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
-                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type message..." class="flex-1 h-input p-3">
-                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold">EXEC</button>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="flex-1 h-input p-3">
+                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase">Exec</button>
                 </div>
             </footer>
         </main>
@@ -93,17 +99,20 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_voice_p2p");
+        const col = collection(db, "cipher_voice_final");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
         let peer;
         let localStream;
+        let currentCall;
 
-        // LOGIN LOGIC
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
         window.logout = () => signOut(auth).then(() => location.reload());
         window.toggleSidebar = () => document.getElementById('sidebar').classList.toggle('open');
+
+        // FIXED ID CLEANER
+        const cleanID = (email) => email.toLowerCase().replace(/[^a-z0-9]/g, "");
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -112,15 +121,17 @@
                 document.getElementById('mainUI').style.opacity = '1';
                 document.getElementById('myUserDisplay').innerText = user.email.split('@')[0];
                 
-                // Initialize Peer with a safe ID
-                const peerID = user.email.replace(/[^a-zA-Z0-9]/g, "");
-                peer = new Peer(peerID);
+                // Initialize Peer with Clean ID
+                peer = new Peer(cleanID(user.email));
 
                 peer.on('call', async (call) => {
-                    if(confirm("INCOMING VOICE LINK... ACCEPT?")) {
-                        localStream = await navigator.mediaDevices.getUserMedia({audio: true});
-                        call.answer(localStream);
-                        handleCall(call);
+                    if(confirm("INCOMING VOICE LINK FROM " + call.peer + ". ACCEPT?")) {
+                        try {
+                            localStream = await navigator.mediaDevices.getUserMedia({audio: true});
+                            call.answer(localStream);
+                            currentCall = call;
+                            handleCall(call);
+                        } catch(e) { alert("Mic Access Denied."); }
                     }
                 });
 
@@ -130,21 +141,37 @@
         });
 
         function handleCall(call) {
-            document.getElementById('voiceStatus').style.display = 'block';
+            document.getElementById('voicePanel').style.display = 'block';
             call.on('stream', (remoteStream) => {
                 document.getElementById('remoteAudio').srcObject = remoteStream;
             });
+            call.on('close', () => endCall());
         }
 
         window.startVoiceCall = async () => {
-            const targetID = activeTarget.replace(/[^a-zA-Z0-9]/g, "");
-            localStream = await navigator.mediaDevices.getUserMedia({audio: true});
-            const call = peer.call(targetID, localStream);
-            handleCall(call);
-            alert("Calling Node... Wait for answer.");
+            try {
+                const targetID = cleanID(activeTarget);
+                localStream = await navigator.mediaDevices.getUserMedia({audio: true});
+                const call = peer.call(targetID, localStream);
+                currentCall = call;
+                handleCall(call);
+                alert("Requesting Connection to: " + targetID);
+            } catch(e) { alert("Microphone required for calls."); }
         };
 
-        // Standard Chat Functions (Same as before)
+        window.toggleMute = () => {
+            const enabled = localStream.getAudioTracks()[0].enabled;
+            localStream.getAudioTracks()[0].enabled = !enabled;
+            document.getElementById('muteBtn').innerText = enabled ? "UNMUTE" : "MUTE";
+        };
+
+        window.endCall = () => {
+            if(currentCall) currentCall.close();
+            if(localStream) localStream.getTracks().forEach(track => track.stop());
+            document.getElementById('voicePanel').style.display = 'none';
+        };
+
+        // Standard Functions
         function loadUsers() {
             onSnapshot(query(col, orderBy("timestamp", "desc")), (snap) => {
                 const users = new Set();
@@ -159,7 +186,7 @@
                     if(u === "mscmkn@mscmkn.com") return;
                     const d = document.createElement('div');
                     d.className = `p-3 text-xs border border-[#222] cursor-pointer ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
-                    d.innerText = `> ${u.split('@')[0].toUpperCase()}`;
+                    d.innerText = `> ${u.toUpperCase()}`;
                     d.onclick = () => startChat(u);
                     list.appendChild(d);
                 });
@@ -168,7 +195,7 @@
 
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = `NODE: ${target.split('@')[0].toUpperCase()}`;
+            document.getElementById('activeNodeName').innerText = `NODE: ${target.toUpperCase()}`;
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
@@ -178,7 +205,7 @@
                         const isMe = d.sender === currentUser.email;
                         box.innerHTML += `<div class="${isMe ? 'ml-auto text-right opacity-50' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
                             <div class="text-[9px] font-bold">[${d.sender.split('@')[0]}]</div>
-                            ${d.image ? `<img src="${d.image}" class="max-w-xs mt-2" />` : `<div>${d.text}</div>`}
+                            ${d.image ? `<img src="${d.image}" class="max-w-xs mt-2 border border-[var(--p)]" />` : `<div>${d.text}</div>`}
                         </div>`;
                     }
                 });

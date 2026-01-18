@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIPHER_NODE // DIAGNOSTIC_V4</title>
+    <title>CIPHER_NODE // RESTORED</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -30,43 +30,53 @@
             <video id="localVideo" autoplay muted playsinline></video>
         </div>
         <div class="controls">
-            <button onclick="endCall()" class="bg-red-900 text-white px-6 py-2 text-[10px] font-bold">TERMINATE</button>
+            <button onclick="endCall()" class="bg-red-900 text-white px-6 py-2 text-[10px] font-bold">DISCONNECT</button>
         </div>
     </div>
 
     <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[2000] p-4">
         <div class="terminal-border p-8 w-full max-w-sm bg-black">
-            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase text-center">Cipher_Gate</h1>
-            <input id="email" type="email" placeholder="IDENTITY_EMAIL" class="h-input w-full p-4 mb-3">
-            <input id="pass" type="password" placeholder="PASSKEY" class="h-input w-full p-4 mb-6">
-            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4 uppercase">Authorize</button>
+            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 uppercase text-center">CIPHER_NODE</h1>
+            <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full p-4 mb-3">
+            <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full p-4 mb-6">
+            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4 uppercase">CONNECT</button>
         </div>
     </div>
 
     <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0">
         <aside id="sidebar" class="w-72 terminal-border flex flex-col bg-black h-full">
-            <div class="p-4 border-b border-[#222] bg-[#050505]">
-                <p class="text-[9px] opacity-40 uppercase">OPERATOR</p>
+            <div class="p-4 border-b border-[#222]">
+                <p class="text-[9px] opacity-40">Myuser_Node</p>
                 <p id="myUserDisplay" class="text-sm font-bold truncate">---</p>
-                <button onclick="testHardware()" class="mt-2 text-[8px] border border-[var(--p)] px-2 py-1">CHECK CONNECTION</button>
             </div>
-            <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-1"></div>
+            <div class="p-3 text-[10px] opacity-40 uppercase">USER_LIST</div>
+            <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+            <button onclick="logout()" class="p-4 text-[10px] opacity-30 text-left">/Terminate</button>
         </aside>
 
         <main class="flex-1 flex flex-col bg-black min-w-0">
             <header class="h-14 border-b border-[#222] flex items-center justify-between px-4 bg-[#080808]">
-                <div id="activeNodeName" class="text-xs font-bold uppercase truncate">IDLE</div>
+                <div class="flex items-center gap-2">
+                    <span id="activeNodeName" class="text-xs font-bold uppercase">Idle_Link</span>
+                </div>
                 <div class="flex gap-2">
                     <button id="callBtn" onclick="startCall(true)" class="hidden border border-[var(--p)] px-3 py-1 text-[10px] font-bold">VIDEO</button>
+                    <button id="voiceBtn" onclick="startCall(false)" class="hidden border border-[var(--p)] px-3 py-1 text-[10px] font-bold">VOICE</button>
                     <button onclick="cycleTheme()" class="border border-[#333] px-3 py-1 text-[10px]">THEME</button>
-                    <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 px-3 py-1 text-[10px]">WIPE</button>
+                    <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 px-3 py-1 text-[10px]">WIPE_LOG</button>
                 </div>
             </header>
+
             <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-lg"></div>
+
             <footer class="p-3 border-t border-[#222] bg-[#050505]">
-                <div class="flex gap-2">
-                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="flex-1 h-input p-3 text-sm">
-                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase text-xs">Execute</button>
+                <div class="flex gap-2 items-center">
+                    <label class="cursor-pointer text-[var(--p)] text-xl px-2">
+                        <i class="fas fa-camera"></i>
+                        <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
+                    </label>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="msgInput : msnd_Text" class="flex-1 h-input p-3 text-sm">
+                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase text-xs h-10">EXEC</button>
                 </div>
             </footer>
         </main>
@@ -89,24 +99,14 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_v4_logs");
-        const usersCol = collection(db, "cipher_v4_users");
+        const col = collection(db, "cipher_restored_v1");
+        const usersCol = collection(db, "cipher_users_v1");
 
         let currentUser, activeTarget, peer, localStream, currentCall;
         const cleanID = (email) => email.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
 
         window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
-        
-        // HARDWARE TEST FUNCTION
-        window.testHardware = async () => {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-                alert("SUCCESS: Camera and Microphone are ready.");
-                stream.getTracks().forEach(t => t.stop());
-            } catch (e) {
-                alert("FAILED: Browser is blocking your hardware. Go to settings and 'Allow' Camera/Mic for this site.");
-            }
-        };
+        window.logout = () => signOut(auth).then(() => location.reload());
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -115,20 +115,22 @@
                 document.getElementById('mainUI').style.opacity = '1';
                 document.getElementById('myUserDisplay').innerText = user.email;
                 
-                // Track user activity globally
-                await setDoc(doc(db, "cipher_v4_users", cleanID(user.email)), { email: user.email.toLowerCase().trim() });
+                // Track all users so Admin can see them
+                await setDoc(doc(db, "cipher_users_v1", cleanID(user.email)), { email: user.email.toLowerCase().trim() });
 
                 peer = new Peer(cleanID(user.email));
                 peer.on('call', async (call) => {
-                    if(confirm("INCOMING VIDEO LINK... AUTHORIZE?")) {
-                        localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                        document.getElementById('localVideo').srcObject = localStream;
+                    if(confirm("INCOMING CALL... ACCEPT?")) {
+                        const isVideo = !!call.options.metadata;
+                        localStream = await navigator.mediaDevices.getUserMedia({video: isVideo, audio: true});
+                        if(isVideo) document.getElementById('localVideo').srcObject = localStream;
                         call.answer(localStream);
                         handleCall(call);
                     }
                 });
 
                 loadUsers();
+                if (user.email !== "mscmkn@mscmkn.com") startChat("mscmkn@mscmkn.com");
             }
         });
 
@@ -140,7 +142,7 @@
                     const u = d.data().email;
                     if(u === currentUser.email.toLowerCase()) return;
                     const div = document.createElement('div');
-                    div.className = `p-3 text-[10px] border border-[#222] cursor-pointer hover:border-[var(--p)] mb-1 ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
+                    div.className = `p-3 text-[10px] border border-[#222] cursor-pointer mb-1 ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
                     div.innerText = u.toUpperCase();
                     div.onclick = () => startChat(u);
                     list.appendChild(div);
@@ -148,14 +150,57 @@
             });
         }
 
+        function startChat(target) {
+            activeTarget = target.toLowerCase().trim();
+            document.getElementById('activeNodeName').innerText = `Active Node: ${activeTarget}`;
+            document.getElementById('callBtn').classList.remove('hidden');
+            document.getElementById('voiceBtn').classList.remove('hidden');
+            if(currentUser.email === "mscmkn@mscmkn.com") document.getElementById('wipeBtn').classList.remove('hidden');
+
+            onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
+                const box = document.getElementById('chatBox');
+                box.innerHTML = '';
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const s = d.sender.toLowerCase().trim();
+                    const r = d.recipient.toLowerCase().trim();
+                    const me = currentUser.email.toLowerCase().trim();
+                    if ((s === me && r === activeTarget) || (s === activeTarget && r === me)) {
+                        const isMe = s === me;
+                        box.innerHTML += `<div class="${isMe ? 'ml-auto text-right' : 'text-left border-l-2 border-[var(--p)] pl-3'} mb-4">
+                            <div class="text-[9px] font-bold opacity-40">[${s.split('@')[0]}]</div>
+                            ${d.image ? `<img src="${d.image}" class="max-w-xs mt-2 border border-[var(--p)] ${isMe ? 'ml-auto' : ''}" />` : `<div class="text-lg">${d.text}</div>`}
+                        </div>`;
+                    }
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        window.sendText = async () => {
+            const input = document.getElementById('msgInput');
+            if(!input.value.trim() || !activeTarget) return;
+            await addDoc(col, { sender: currentUser.email.toLowerCase().trim(), recipient: activeTarget, text: input.value, timestamp: serverTimestamp() });
+            input.value = "";
+        };
+
+        window.sendImage = () => {
+            const file = document.getElementById('imgInput').files[0];
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                await addDoc(col, { sender: currentUser.email.toLowerCase().trim(), recipient: activeTarget, image: reader.result, timestamp: serverTimestamp() });
+            };
+            if (file) reader.readAsDataURL(file);
+        };
+
         window.startCall = async (isVideo) => {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({video: isVideo, audio: true});
-                document.getElementById('localVideo').srcObject = localStream;
+                if(isVideo) document.getElementById('localVideo').srcObject = localStream;
                 document.getElementById('videoGrid').style.display = 'flex';
                 const call = peer.call(cleanID(activeTarget), localStream, {metadata: isVideo});
                 handleCall(call);
-            } catch(e) { alert("Call Failed: Camera/Mic permissions not found."); }
+            } catch(e) { alert("Permission Denied."); }
         };
 
         function handleCall(call) {
@@ -171,53 +216,24 @@
             document.getElementById('videoGrid').style.display = 'none';
         };
 
-        function startChat(target) {
-            activeTarget = target.toLowerCase().trim();
-            document.getElementById('activeNodeName').innerText = `UPLINK: ${activeTarget}`;
-            document.getElementById('callBtn').classList.remove('hidden');
-            if(currentUser.email === "mscmkn@mscmkn.com") document.getElementById('wipeBtn').classList.remove('hidden');
-            
-            // Re-sync messages
-            onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
-                const box = document.getElementById('chatBox');
-                box.innerHTML = '';
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    const s = d.sender.toLowerCase().trim();
-                    const r = d.recipient.toLowerCase().trim();
-                    const me = currentUser.email.toLowerCase().trim();
-                    
-                    if ((s === me && r === activeTarget) || (s === activeTarget && r === me)) {
-                        const isMe = s === me;
-                        box.innerHTML += `<div class="${isMe ? 'ml-auto text-right opacity-50' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
-                            <div class="text-[9px] font-bold">[${s.split('@')[0]}]</div>
-                            <div>${d.text}</div>
-                        </div>`;
-                    }
-                });
-                box.scrollTop = box.scrollHeight;
+        window.wipeChat = async () => {
+            if(!confirm("WIPE LOGS?")) return;
+            const snap = await getDocs(query(col));
+            snap.forEach(async (d) => {
+                const data = d.data();
+                if ((data.sender.toLowerCase().trim() === currentUser.email.toLowerCase().trim() && data.recipient.toLowerCase().trim() === activeTarget) || (data.sender.toLowerCase().trim() === activeTarget && data.recipient.toLowerCase().trim() === currentUser.email.toLowerCase().trim())) {
+                    await deleteDoc(doc(db, "cipher_restored_v1", d.id));
+                }
             });
-        }
-
-        window.sendText = async () => {
-            const input = document.getElementById('msgInput');
-            if(!input.value.trim() || !activeTarget) return;
-            await addDoc(col, { 
-                sender: currentUser.email.toLowerCase().trim(), 
-                recipient: activeTarget, 
-                text: input.value, 
-                timestamp: serverTimestamp() 
-            });
-            input.value = "";
         };
 
+        let tIdx = 0;
         window.cycleTheme = () => {
             const themes = ['theme-cyan', 'theme-green', 'theme-red'];
             document.body.classList.remove(themes[tIdx]);
             tIdx = (tIdx + 1) % themes.length;
             document.body.classList.add(themes[tIdx]);
         };
-        let tIdx = 0;
     </script>
 </body>
 </html>

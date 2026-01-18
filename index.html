@@ -3,104 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>mscmkn // GHOST_PROTOCOL</title>
+    <title>TITAN_NODE // mscmkn</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #ffb000; /* Default Amber */
-            --bg: #0a0a0a;
-            --panel: #141414;
-            --border: #222222;
-        }
-        /* Theme Variants */
-        body.theme-amber { --primary: #ffb000; }
-        body.theme-green { --primary: #00ff41; }
-        body.theme-blue { --primary: #00e5ff; }
-        body.theme-red { --primary: #ff3131; }
-
+        :root { --p: #00ff41; --bg: #050505; }
         body { 
-            background-color: var(--bg); 
-            color: var(--primary); 
-            font-family: 'JetBrains Mono', monospace;
-            transition: color 0.3s ease, border 0.3s ease;
+            background: var(--bg); color: var(--p); 
+            font-family: 'Courier Prime', monospace; 
+            font-size: 18px; /* Increased base size */
         }
-        .terminal-border { border: 1px solid var(--border); }
-        .input-area { background: #000; border: 1px solid var(--border); color: var(--primary); }
-        .input-area:focus { border-color: var(--primary); outline: none; }
-        
-        .msg-target { border-left: 2px solid var(--primary); padding-left: 10px; }
-        .active-node { background-color: var(--primary); color: black !important; font-weight: 800; }
-
-        /* Responsive Mobile Drawer */
-        @media (max-width: 768px) {
-            #sidebar {
-                position: absolute;
-                z-index: 50;
-                height: 100%;
-                width: 80%;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease-in-out;
-            }
-            #sidebar.open { transform: translateX(0); }
-        }
-
-        /* Scanline Overlay */
-        .scanline::before {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 100; background-size: 100% 2px, 3px 100%; pointer-events: none;
-        }
+        .h-border { border: 2px solid #111; }
+        .h-input { background: #000; border: 2px solid #222; color: var(--p); font-size: 20px; padding: 12px; }
+        .h-input:focus { border-color: var(--p); outline: none; }
+        .msg-line { border-left: 3px solid #111; padding-left: 15px; margin-bottom: 20px; }
+        .admin-view { border-left-color: var(--p); }
+        .img-preview { max-width: 300px; border: 1px solid var(--p); margin-top: 10px; filter: grayscale(1) contrast(1.2); }
+        /* Larger buttons for touch/mobile */
+        button { cursor: pointer; text-transform: uppercase; font-weight: bold; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #222; }
     </style>
 </head>
-<body class="flex h-screen w-screen overflow-hidden theme-amber scanline">
+<body class="flex h-screen w-screen overflow-hidden">
 
-    <div id="authOverlay" class="fixed inset-0 bg-black flex items-center justify-center z-[110]">
-        <div class="p-8 w-full max-w-sm border border-[#333] bg-[#0a0a0a]">
-            <h1 class="text-xl font-extrabold tracking-tighter mb-6 underline">IDENTITY_VERIFICATION</h1>
-            <div class="space-y-4">
-                <input id="email" type="email" placeholder="USER_ID" class="input-area w-full p-2 text-xs">
-                <input id="pass" type="password" placeholder="PASSKEY" class="input-area w-full p-2 text-xs">
-                <button onclick="login()" class="w-full bg-[var(--primary)] text-black font-black py-3 text-xs uppercase transition-colors">INITIATE</button>
-            </div>
-            <p id="authError" class="text-red-800 text-[10px] mt-4 hidden text-center font-bold">ERR: UNRECOGNIZED_UID</p>
+    <div id="authOverlay" class="fixed inset-0 bg-black flex flex-col items-center justify-center z-[110] p-6">
+        <div class="w-full max-w-lg">
+            <h1 class="text-4xl font-bold mb-8 border-b-4 border-[var(--p)] pb-2 uppercase tracking-tighter">System_Login</h1>
+            <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full mb-4">
+            <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full mb-6">
+            <button onclick="login()" class="w-full bg-[var(--p)] text-black py-4 text-xl">Initialize_Uplink</button>
+            <p id="authError" class="text-red-500 mt-4 hidden">AUTH_ERR: INVALID_KEY</p>
         </div>
     </div>
 
-    <aside id="sidebar" class="bg-[#0a0a0a] border-r border-[#222] flex flex-col hidden md:flex md:w-64">
-        <div class="p-6 border-b border-[#222]">
-            <span class="text-[9px] text-[#555] block">OPERATOR</span>
-            <span id="myUserDisplay" class="text-xs font-bold text-white">---</span>
+    <aside id="sidebar" class="w-80 h-border flex flex-col hidden bg-black">
+        <div class="p-6 border-b-2 border-[#111]">
+            <p class="text-xs opacity-50 uppercase">Master_Node</p>
+            <p id="myUserDisplay" class="text-xl font-bold">---</p>
         </div>
-        <div id="userList" class="flex-1 overflow-y-auto p-4 space-y-2">
-            </div>
-        <div class="p-4 flex flex-col gap-2">
-            <button onclick="logout()" class="text-[9px] text-[#555] hover:text-white uppercase text-left">/TERMINATE</button>
-        </div>
+        <div id="userList" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+        <button onclick="logout()" class="p-4 text-xs opacity-30 hover:opacity-100">/Terminate</button>
     </aside>
 
-    <main id="chatMain" class="flex-1 flex flex-col hidden bg-[#0a0a0a]">
-        <header class="h-14 border-b border-[#222] flex items-center justify-between px-4 md:px-6">
-            <div class="flex items-center gap-4">
-                <button onclick="toggleSidebar()" class="md:hidden text-lg">☰</button>
-                <span id="activeNodeName" class="text-xs font-bold tracking-tighter uppercase">LINK_IDLE</span>
+    <main id="chatMain" class="flex-1 flex flex-col hidden">
+        <header class="h-20 h-border flex items-center justify-between px-8 bg-black">
+            <div>
+                <span id="activeNodeName" class="text-2xl font-bold uppercase tracking-tight">Idle_Link</span>
             </div>
-            
-            <div class="flex items-center gap-4">
-                <button onclick="cycleTheme()" class="text-[9px] border border-[#333] px-2 py-1 hover:border-[var(--primary)]">THEME_CYCLER</button>
-                <span class="text-[9px] hidden sm:inline text-[#444]">SECURE_UPLINK</span>
+            <div id="adminTools" class="hidden">
+                <button onclick="wipeCurrentChat()" class="bg-red-900 text-white text-xs px-4 py-2 hover:bg-red-600 transition">Wipe_Log</button>
             </div>
         </header>
 
-        <div id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 text-xs">
-            <div class="text-[#333]">[System] Terminal ready. No packets received.</div>
-        </div>
+        <div id="chatBox" class="flex-1 overflow-y-auto p-8 space-y-6"></div>
 
-        <footer class="p-4 md:p-6 border-t border-[#222]">
-            <div class="flex gap-2 items-center">
-                <span class="text-[#333]">$</span>
-                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="INPUT_DATA..." class="flex-1 bg-transparent border-none outline-none text-xs text-[var(--primary)]">
-                <button onclick="sendText()" class="text-[10px] font-bold uppercase opacity-50 hover:opacity-100 transition">EXEC</button>
+        <footer class="p-6 h-border bg-black">
+            <div class="flex gap-4">
+                <label class="h-input cursor-pointer flex items-center justify-center px-6 hover:bg-[#111]">
+                    <i class="fas fa-camera"></i>
+                    <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
+                </label>
+                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type Message..." class="flex-1 h-input">
+                <button onclick="sendText()" class="px-8 border-2 border-[var(--p)] hover:bg-[var(--p)] hover:text-black transition">Execute</button>
             </div>
         </footer>
     </main>
@@ -108,7 +73,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
@@ -122,12 +87,11 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "ghost_comms");
+        const col = collection(db, "titan_logs");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
 
-        // Login / Logout
         window.login = () => {
             signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(() => {
                 document.getElementById('authError').classList.remove('hidden');
@@ -135,30 +99,16 @@
         };
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        // Theme Cycler
-        const themes = ['theme-amber', 'theme-green', 'theme-blue', 'theme-red'];
-        let currentThemeIndex = 0;
-        window.cycleTheme = () => {
-            document.body.classList.remove(themes[currentThemeIndex]);
-            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-            document.body.classList.add(themes[currentThemeIndex]);
-        };
-
-        // Sidebar Toggle for Mobile
-        window.toggleSidebar = () => {
-            const sb = document.getElementById('sidebar');
-            sb.classList.contains('open') ? sb.classList.remove('open') : sb.classList.add('open');
-        };
-
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
                 document.getElementById('authOverlay').classList.add('hidden');
                 document.getElementById('chatMain').classList.remove('hidden');
-                document.getElementById('myUserDisplay').innerText = user.email.split('@')[0].toUpperCase();
+                document.getElementById('myUserDisplay').innerText = user.email.split('@')[0];
                 
                 if (user.email === "mscmkn@mscmkn.com") {
                     document.getElementById('sidebar').classList.remove('hidden');
+                    document.getElementById('adminTools').classList.remove('hidden');
                     loadAdminList();
                 } else {
                     startChat("mscmkn@mscmkn.com");
@@ -179,9 +129,9 @@
                 targets.forEach(t => {
                     if (t === "mscmkn@mscmkn.com") return;
                     const div = document.createElement('div');
-                    div.className = `p-2 text-[10px] border border-[#222] cursor-pointer hover:border-[var(--primary)] transition ${activeTarget === t ? 'active-node' : ''}`;
-                    div.innerHTML = `> NODE_${t.split('@')[0].toUpperCase()}`;
-                    div.onclick = () => { startChat(t); document.getElementById('sidebar').classList.remove('open'); };
+                    div.className = `p-4 border-2 border-[#111] cursor-pointer hover:border-[var(--p)] text-xl font-bold ${activeTarget === t ? 'border-[var(--p)] bg-[#0a220a]' : ''}`;
+                    div.innerText = `> ${t.split('@')[0].toUpperCase()}`;
+                    div.onclick = () => startChat(t);
                     list.appendChild(div);
                 });
             });
@@ -189,7 +139,7 @@
 
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = `TARGET: ${target.split('@')[0].toUpperCase()}`;
+            document.getElementById('activeNodeName').innerText = `Uplink: ${target.split('@')[0]}`;
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
@@ -199,9 +149,9 @@
                         (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
                         box.innerHTML += `
-                            <div class="mb-2 ${isMe ? 'opacity-40' : 'msg-target text-white'}">
-                                <span class="text-[9px]">[${d.sender.split('@')[0].toUpperCase()}]:</span>
-                                <span class="ml-2">${d.text}</span>
+                            <div class="msg-line ${isMe ? 'opacity-40' : 'admin-view'}">
+                                <span class="text-xs font-bold">[${d.sender.split('@')[0].toUpperCase()}]:</span><br>
+                                ${d.image ? `<img src="${d.image}" class="img-preview" />` : `<span class="text-2xl">${d.text}</span>`}
                             </div>`;
                     }
                 });
@@ -215,6 +165,30 @@
             await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: input.value, timestamp: serverTimestamp() });
             input.value = "";
         };
+
+        // NEW: IMAGE AS TEXT (Base64) - NO STORAGE NEEDED
+        window.sendImage = () => {
+            const file = document.getElementById('imgInput').files[0];
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                await addDoc(col, { sender: currentUser.email, recipient: activeTarget, image: reader.result, timestamp: serverTimestamp() });
+            };
+            if (file) reader.readAsDataURL(file);
+        };
+
+        // NEW: WIPE LOG (Admin Only)
+        window.wipeCurrentChat = async () => {
+            if(!confirm("Destroy communication logs for this node?")) return;
+            const q = query(col);
+            const snap = await getDocs(q);
+            snap.forEach(async (d) => {
+                const data = d.data();
+                if ((data.sender === currentUser.email && data.recipient === activeTarget) || 
+                    (data.sender === activeTarget && data.recipient === currentUser.email)) {
+                    await deleteDoc(doc(db, "titan_logs", d.id));
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CIPHER_NODE // UPLINK_ULTRA</title>
+    <title>CIPHER_NODE // FINAL_PATCH</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -83,6 +83,7 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, setDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // FIREBASE CONFIG (SAME AS BEFORE)
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
             authDomain: "private--chat-4f6c4.firebaseapp.com",
@@ -95,14 +96,14 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_ultra_v6");
+        const col = collection(db, "cipher_ultra_v7");
         const signals = collection(db, "call_signals");
         const usersCol = collection(db, "active_users");
 
         let currentUser, activeTarget, peer, localStream, currentCall;
         const cleanID = (email) => email.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
         window.logout = () => signOut(auth).then(() => location.reload());
 
         onAuthStateChanged(auth, async (user) => {
@@ -113,14 +114,14 @@
                 document.getElementById('myUserDisplay').innerText = user.email;
                 await setDoc(doc(db, "active_users", cleanID(user.email)), { email: user.email, lastActive: serverTimestamp() });
 
-                // PEER WITH STUN SERVER (BYPASS FIREWALLS)
                 peer = new Peer(cleanID(user.email), {
-                    config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }, { 'urls': 'stun:stun1.l.google.com:19302' }]}
+                    config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}
                 });
 
+                // When Peer receives a call naturally
                 peer.on('call', (call) => incomingCallUI(call));
 
-                // BACKUP SIGNALING: Listen for Firebase signals
+                // BACKUP SIGNAL: For when PeerJS signaling is slow
                 onSnapshot(query(signals, where("recipient", "==", user.email)), (snap) => {
                     snap.forEach(d => {
                         if(d.data().status === "pending") {
@@ -135,15 +136,33 @@
             }
         });
 
+        // FIXED CONNECT LOGIC
         function incomingCallUI(call) {
             const overlay = document.getElementById('incomingOverlay');
             overlay.style.display = 'flex';
+            
             document.getElementById('acceptBtn').onclick = async () => {
-                overlay.style.display = 'none';
-                localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                document.getElementById('localVideo').srcObject = localStream;
-                call.answer(localStream);
-                handleCall(call);
+                try {
+                    // 1. Get media FIRST (Must be inside the click handler for mobile)
+                    localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+                    
+                    // 2. Hide UI
+                    overlay.style.display = 'none';
+                    document.getElementById('videoGrid').style.display = 'flex';
+                    
+                    // 3. Set local stream
+                    document.getElementById('localVideo').srcObject = localStream;
+                    
+                    // 4. Answer the call
+                    call.answer(localStream);
+                    handleCall(call);
+                    
+                    // 5. Cleanup signal
+                    const q = await getDocs(query(signals, where("recipient", "==", currentUser.email)));
+                    q.forEach(async d => await deleteDoc(doc(db, "call_signals", d.id)));
+                } catch(e) {
+                    alert("CAMERA_ERROR: Check browser permissions!");
+                }
             };
         }
 
@@ -153,36 +172,32 @@
                 document.getElementById('localVideo').srcObject = localStream;
                 document.getElementById('videoGrid').style.display = 'flex';
                 
-                // Send Signal via Firebase first
+                // Alert the other user via Firebase
                 await addDoc(signals, { sender: currentUser.email, recipient: activeTarget, status: "pending", timestamp: serverTimestamp() });
                 
                 const call = peer.call(cleanID(activeTarget), localStream, {metadata: isVideo});
                 handleCall(call);
-            } catch(e) { alert("Check Permissions!"); }
+            } catch(e) { alert("Media blocked!"); }
         };
 
         function handleCall(call) {
             currentCall = call;
-            document.getElementById('videoGrid').style.display = 'flex';
-            call.on('stream', (s) => {
+            call.on('stream', (remoteStream) => {
                 const r = document.getElementById('remoteVideo');
-                r.srcObject = s;
-                r.play().catch(() => { r.muted = true; r.play(); });
+                r.srcObject = remoteStream;
+                r.onloadedmetadata = () => r.play();
             });
             call.on('close', endCall);
         }
 
-        window.endCall = async () => {
+        window.endCall = () => {
             document.getElementById('incomingOverlay').style.display = 'none';
             if(currentCall) currentCall.close();
             if(localStream) localStream.getTracks().forEach(t => t.stop());
             document.getElementById('videoGrid').style.display = 'none';
-            // Clear signals
-            const q = await getDocs(query(signals, where("recipient", "==", currentUser.email)));
-            q.forEach(async d => await deleteDoc(doc(db, "call_signals", d.id)));
         };
 
-        // Standard Theme and Chat Logic
+        // THEME & CHAT LOGIC (SAME AS PREVIOUS)
         const themes = ['theme-cyan', 'theme-green', 'theme-red'];
         let tIdx = 0;
         window.cycleTheme = () => {
@@ -211,15 +226,13 @@
             activeTarget = target;
             document.getElementById('activeNodeName').innerText = target;
             document.getElementById('callBtn').classList.remove('hidden');
-            if(currentUser.email === "mscmkn@mscmkn.com") document.getElementById('wipeBtn').classList.remove('hidden');
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
                 snap.forEach(doc => {
                     const d = doc.data();
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || (d.sender === activeTarget && d.recipient === currentUser.email)) {
-                        const isMe = d.sender === currentUser.email;
-                        box.innerHTML += `<div class="${isMe ? 'ml-auto text-right opacity-50' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
+                        box.innerHTML += `<div class="${d.sender === currentUser.email ? 'ml-auto text-right opacity-50' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
                             <div class="text-[9px] font-bold">[${d.sender.split('@')[0]}]</div>
                             <div>${d.text}</div>
                         </div>`;
@@ -237,12 +250,11 @@
         };
 
         window.wipeChat = async () => {
-            if(!confirm("WIPE LOGS?")) return;
             const snap = await getDocs(query(col));
             snap.forEach(async (d) => {
                 const data = d.data();
                 if ((data.sender === currentUser.email && data.recipient === activeTarget) || (data.sender === activeTarget && data.recipient === currentUser.email)) {
-                    await deleteDoc(doc(db, "cipher_ultra_v6", d.id));
+                    await deleteDoc(doc(db, "cipher_ultra_v7", d.id));
                 }
             });
         };

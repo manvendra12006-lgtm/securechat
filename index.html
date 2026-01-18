@@ -8,84 +8,99 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;500;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --amber: #ffb000; /* Industrial Amber / Phosphor */
+            --primary: #ffb000; /* Default Amber */
             --bg: #0a0a0a;
             --panel: #141414;
             --border: #222222;
         }
+        /* Theme Variants */
+        body.theme-amber { --primary: #ffb000; }
+        body.theme-green { --primary: #00ff41; }
+        body.theme-blue { --primary: #00e5ff; }
+        body.theme-red { --primary: #ff3131; }
+
         body { 
             background-color: var(--bg); 
-            color: var(--amber); 
+            color: var(--primary); 
             font-family: 'JetBrains Mono', monospace;
-            letter-spacing: -0.02em;
+            transition: color 0.3s ease, border 0.3s ease;
         }
-        .terminal-ui { border: 1px solid var(--border); }
-        .amber-glow { text-shadow: 0 0 8px rgba(255, 176, 0, 0.4); }
-        .input-area { background: #000; border: 1px solid var(--border); color: var(--amber); }
-        .input-area:focus { border-color: var(--amber); outline: none; }
+        .terminal-border { border: 1px solid var(--border); }
+        .input-area { background: #000; border: 1px solid var(--border); color: var(--primary); }
+        .input-area:focus { border-color: var(--primary); outline: none; }
         
-        /* Message Styling - Brutalist */
-        .msg-wrap { border-bottom: 1px border-transparent; padding: 4px 0; }
-        .msg-me { color: #888; } /* De-emphasize own messages for focus */
-        .msg-target { color: var(--amber); border-left: 2px solid var(--amber); padding-left: 10px; }
-        
-        /* CRT Effect */
-        .crt::before {
+        .msg-target { border-left: 2px solid var(--primary); padding-left: 10px; }
+        .active-node { background-color: var(--primary); color: black !important; font-weight: 800; }
+
+        /* Responsive Mobile Drawer */
+        @media (max-width: 768px) {
+            #sidebar {
+                position: absolute;
+                z-index: 50;
+                height: 100%;
+                width: 80%;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            #sidebar.open { transform: translateX(0); }
+        }
+
+        /* Scanline Overlay */
+        .scanline::before {
             content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2; background-size: 100% 2px, 3px 100%; pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 100; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
     </style>
 </head>
-<body class="flex h-screen w-screen overflow-hidden crt">
+<body class="flex h-screen w-screen overflow-hidden theme-amber scanline">
 
-    <div id="authOverlay" class="fixed inset-0 bg-black flex items-center justify-center z-[100]">
+    <div id="authOverlay" class="fixed inset-0 bg-black flex items-center justify-center z-[110]">
         <div class="p-8 w-full max-w-sm border border-[#333] bg-[#0a0a0a]">
-            <div class="mb-10">
-                <h1 class="text-xl font-extrabold tracking-tighter amber-glow">LOGIN_GATE_v2.0</h1>
-                <p class="text-[9px] text-[#555] uppercase mt-1">Authorized Personnel Only</p>
+            <h1 class="text-xl font-extrabold tracking-tighter mb-6 underline">IDENTITY_VERIFICATION</h1>
+            <div class="space-y-4">
+                <input id="email" type="email" placeholder="USER_ID" class="input-area w-full p-2 text-xs">
+                <input id="pass" type="password" placeholder="PASSKEY" class="input-area w-full p-2 text-xs">
+                <button onclick="login()" class="w-full bg-[var(--primary)] text-black font-black py-3 text-xs uppercase transition-colors">INITIATE</button>
             </div>
-            <div class="space-y-2">
-                <div class="text-[10px] text-[#555]">ID_PATH:</div>
-                <input id="email" type="email" placeholder="user@mscmkn.net" class="input-area w-full p-2 text-xs">
-                <div class="text-[10px] text-[#555] mt-4">SECRET_KEY:</div>
-                <input id="pass" type="password" placeholder="********" class="input-area w-full p-2 text-xs">
-                <button onclick="login()" class="w-full bg-[#ffb000] text-black font-black py-3 mt-6 text-xs uppercase hover:bg-white transition">Initialize_Session</button>
-            </div>
-            <p id="authError" class="text-red-800 text-[10px] mt-4 hidden text-center font-bold">ERR: KEY_MISMATCH</p>
+            <p id="authError" class="text-red-800 text-[10px] mt-4 hidden text-center font-bold">ERR: UNRECOGNIZED_UID</p>
         </div>
     </div>
 
-    <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col hidden bg-[#0a0a0a]">
+    <aside id="sidebar" class="bg-[#0a0a0a] border-r border-[#222] flex flex-col hidden md:flex md:w-64">
         <div class="p-6 border-b border-[#222]">
-            <span class="text-[9px] text-[#555] block">OPERATOR_ID</span>
-            <span id="myUserDisplay" class="text-xs font-bold text-white tracking-widest">---</span>
+            <span class="text-[9px] text-[#555] block">OPERATOR</span>
+            <span id="myUserDisplay" class="text-xs font-bold text-white">---</span>
         </div>
-        <div id="userList" class="flex-1 overflow-y-auto p-4 space-y-1">
+        <div id="userList" class="flex-1 overflow-y-auto p-4 space-y-2">
             </div>
-        <div class="p-4 bg-[#0e0e0e]">
-            <button onclick="logout()" class="text-[9px] text-[#555] hover:text-white uppercase">/TERMINATE</button>
+        <div class="p-4 flex flex-col gap-2">
+            <button onclick="logout()" class="text-[9px] text-[#555] hover:text-white uppercase text-left">/TERMINATE</button>
         </div>
     </aside>
 
     <main id="chatMain" class="flex-1 flex flex-col hidden bg-[#0a0a0a]">
-        <header class="h-14 border-b border-[#222] flex items-center justify-between px-6">
-            <div class="flex items-center gap-3">
-                <div class="w-2 h-2 bg-[#ffb000] rounded-full animate-pulse shadow-[0_0_5px_#ffb000]"></div>
-                <span id="activeNodeName" class="text-xs font-bold tracking-tighter uppercase">READY_FOR_LINK</span>
+        <header class="h-14 border-b border-[#222] flex items-center justify-between px-4 md:px-6">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="md:hidden text-lg">☰</button>
+                <span id="activeNodeName" class="text-xs font-bold tracking-tighter uppercase">LINK_IDLE</span>
             </div>
-            <span class="text-[10px] text-[#444]">P2P_STREAMS_ACTIVE</span>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="cycleTheme()" class="text-[9px] border border-[#333] px-2 py-1 hover:border-[var(--primary)]">THEME_CYCLER</button>
+                <span class="text-[9px] hidden sm:inline text-[#444]">SECURE_UPLINK</span>
+            </div>
         </header>
 
-        <div id="chatBox" class="flex-1 overflow-y-auto p-8 space-y-4 text-xs leading-relaxed">
-            <div class="text-[#333] mb-10">[System] Uplink established. Waiting for packets...</div>
+        <div id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-4 text-xs">
+            <div class="text-[#333]">[System] Terminal ready. No packets received.</div>
         </div>
 
-        <footer class="p-6 border-t border-[#222]">
-            <div class="flex gap-4">
-                <span class="text-[#333]">&gt;</span>
-                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Enter command or message..." class="flex-1 bg-transparent border-none outline-none text-xs text-[#ffb000] placeholder:text-[#222]">
-                <button onclick="sendText()" class="text-[10px] text-[#555] hover:text-[#ffb000] font-bold uppercase transition">Send_Data</button>
+        <footer class="p-4 md:p-6 border-t border-[#222]">
+            <div class="flex gap-2 items-center">
+                <span class="text-[#333]">$</span>
+                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="INPUT_DATA..." class="flex-1 bg-transparent border-none outline-none text-xs text-[var(--primary)]">
+                <button onclick="sendText()" class="text-[10px] font-bold uppercase opacity-50 hover:opacity-100 transition">EXEC</button>
             </div>
         </footer>
     </main>
@@ -107,20 +122,33 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "comms_v2");
+        const col = collection(db, "ghost_comms");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
 
+        // Login / Logout
         window.login = () => {
-            const email = document.getElementById('email').value.trim();
-            const pass = document.getElementById('pass').value;
-            signInWithEmailAndPassword(auth, email, pass).catch(() => {
+            signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(() => {
                 document.getElementById('authError').classList.remove('hidden');
             });
         };
-
         window.logout = () => signOut(auth).then(() => location.reload());
+
+        // Theme Cycler
+        const themes = ['theme-amber', 'theme-green', 'theme-blue', 'theme-red'];
+        let currentThemeIndex = 0;
+        window.cycleTheme = () => {
+            document.body.classList.remove(themes[currentThemeIndex]);
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+            document.body.classList.add(themes[currentThemeIndex]);
+        };
+
+        // Sidebar Toggle for Mobile
+        window.toggleSidebar = () => {
+            const sb = document.getElementById('sidebar');
+            sb.classList.contains('open') ? sb.classList.remove('open') : sb.classList.add('open');
+        };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -151,9 +179,9 @@
                 targets.forEach(t => {
                     if (t === "mscmkn@mscmkn.com") return;
                     const div = document.createElement('div');
-                    div.className = `p-2 text-[10px] border border-[#222] cursor-pointer mb-1 hover:border-[#ffb000] transition ${activeTarget === t ? 'bg-[#ffb000] text-black font-bold' : ''}`;
-                    div.innerHTML = `NOD_${t.split('@')[0].toUpperCase()}`;
-                    div.onclick = () => startChat(t);
+                    div.className = `p-2 text-[10px] border border-[#222] cursor-pointer hover:border-[var(--primary)] transition ${activeTarget === t ? 'active-node' : ''}`;
+                    div.innerHTML = `> NODE_${t.split('@')[0].toUpperCase()}`;
+                    div.onclick = () => { startChat(t); document.getElementById('sidebar').classList.remove('open'); };
                     list.appendChild(div);
                 });
             });
@@ -161,19 +189,18 @@
 
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = `NODE:// ${target.split('@')[0].toUpperCase()}`;
+            document.getElementById('activeNodeName').innerText = `TARGET: ${target.split('@')[0].toUpperCase()}`;
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
-                box.innerHTML = '<div class="text-[#333] mb-4 uppercase">[Logs recovered]</div>';
+                box.innerHTML = '';
                 snap.forEach(doc => {
                     const d = doc.data();
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || 
                         (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
-                        const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}) : '';
                         box.innerHTML += `
-                            <div class="msg-wrap ${isMe ? 'msg-me' : 'msg-target'}">
-                                <span class="text-[9px] font-bold">[${time}] [${d.sender.split('@')[0].toUpperCase()}]:</span>
+                            <div class="mb-2 ${isMe ? 'opacity-40' : 'msg-target text-white'}">
+                                <span class="text-[9px]">[${d.sender.split('@')[0].toUpperCase()}]:</span>
                                 <span class="ml-2">${d.text}</span>
                             </div>`;
                     }
@@ -184,9 +211,8 @@
 
         window.sendText = async () => {
             const input = document.getElementById('msgInput');
-            const val = input.value.trim();
-            if(!val) return;
-            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: val, timestamp: serverTimestamp() });
+            if(!input.value.trim()) return;
+            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: input.value, timestamp: serverTimestamp() });
             input.value = "";
         };
     </script>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIPHER_NODE // TERMINAL</title>
+    <title>CIPHER_NODE // mscmkn</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
@@ -20,77 +20,82 @@
             overflow: hidden; 
         }
 
-        /* REAL MOTION GRAPHICS: CRT EFFECT */
-        .crt::before {
-            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 100; background-size: 100% 2px, 3px 100%; pointer-events: none;
-        }
-        
-        /* MOVING SCANLINE */
-        .scanline {
-            width: 100%; height: 100px; z-index: 101; background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(0, 0, 0, 0) 100%);
-            opacity: 0.1; position: absolute; bottom: 100%; animation: scan 8s linear infinite;
-        }
-        @keyframes scan { to { bottom: -100px; } }
-
-        .terminal-box { border: 1px solid #333; box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-        .h-input { background: transparent; border: 1px solid #333; color: var(--p); }
+        /* Fixed Brutalist Layout from Image */
+        .terminal-box { border: 1px solid #333; background: #000; }
+        .inner-border { border: 1px solid #222; }
+        .h-input { background: #050505; border: 1px solid #333; color: var(--p); font-size: 16px; }
         .h-input:focus { border-color: var(--p); outline: none; }
         
-        /* IMAGE OVERLAY ICON */
-        .img-container { position: relative; display: inline-block; border: 1px solid var(--p); padding: 5px; background: #000; }
-        .img-icon { position: absolute; top: 10px; left: 10px; background: var(--p); color: black; padding: 2px 6px; font-size: 12px; font-weight: bold; }
+        /* Image Box with Icon Overlay */
+        .img-wrapper { position: relative; border: 1px solid var(--p); padding: 4px; background: #000; display: inline-block; }
+        .img-overlay-icon { 
+            position: absolute; top: 8px; left: 8px; 
+            background: var(--p); color: #000; 
+            padding: 2px 6px; font-size: 10px; font-weight: bold; 
+        }
 
-        .sidebar-item { border: 1px solid transparent; transition: 0.2s; cursor: pointer; }
-        .sidebar-item:hover { border-color: var(--p); background: rgba(255,255,255,0.05); }
-        .active-node { border-color: var(--p); background: rgba(0, 242, 255, 0.1); }
+        /* Message Styling */
+        .msg-container { border-left: 1px solid #222; padding-left: 15px; margin-bottom: 24px; }
+        .msg-header { font-size: 10px; text-transform: uppercase; margin-bottom: 4px; opacity: 0.6; }
+        .msg-text { font-size: 18px; line-height: 1.4; }
+
+        /* Sidebar Styling */
+        .node-btn { border: 1px solid #222; margin-bottom: 4px; padding: 10px; cursor: pointer; font-size: 12px; }
+        .node-btn:hover { border-color: var(--p); }
+        .node-active { border-color: var(--p); background: rgba(0, 242, 255, 0.05); }
     </style>
 </head>
-<body class="crt h-screen w-screen flex flex-col p-4 theme-cyan">
-    <div class="scanline"></div>
+<body class="h-screen w-screen flex flex-col p-4 theme-cyan">
 
     <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[200]">
-        <div class="terminal-box p-8 w-80 bg-black">
-            <h2 class="text-xl font-bold mb-6 tracking-widest uppercase border-b border-gray-800 pb-2">Cipher_Node</h2>
-            <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full p-2 mb-3 text-sm">
-            <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full p-2 mb-6 text-sm">
-            <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-2 uppercase hover:opacity-80">Connect</button>
+        <div class="terminal-box p-10 w-full max-w-sm">
+            <h1 class="text-2xl font-bold mb-8 tracking-widest border-b border-gray-800 pb-2">CIPHER_NODE</h1>
+            <div class="space-y-4">
+                <input id="email" type="email" placeholder="ACCESS_ID" class="h-input w-full p-3">
+                <input id="pass" type="password" placeholder="PASSWORD" class="h-input w-full p-3">
+                <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-3 uppercase text-sm">Connect</button>
+            </div>
+            <p id="authError" class="text-red-600 text-[10px] mt-4 hidden">ERR_AUTH_FAILURE</p>
         </div>
     </div>
 
-    <div class="flex flex-1 gap-4">
-        <aside id="sidebar" class="w-72 terminal-box hidden flex-col bg-black overflow-hidden">
-            <div class="p-4 border-b border-gray-800 flex items-center gap-3">
-                <i class="fas fa-microchip"></i>
-                <span id="myUserDisplay" class="text-xs font-bold uppercase">---</span>
+    <div class="flex flex-1 gap-4 overflow-hidden">
+        <aside id="sidebar" class="w-64 terminal-box hidden flex-col">
+            <div class="p-4 border-b border-gray-800 bg-[#050505]">
+                <p class="text-[10px] opacity-40">MASTER_NODE</p>
+                <p id="myUserDisplay" class="font-bold text-sm">---</p>
             </div>
-            <div class="p-2 text-[10px] opacity-40 uppercase">User_List</div>
-            <div id="userList" class="flex-1 overflow-y-auto px-2 space-y-1"></div>
-            <button onclick="logout()" class="p-4 text-[10px] opacity-30 hover:opacity-100 text-left">/Terminate</button>
+            <div id="userList" class="flex-1 overflow-y-auto p-4">
+                </div>
+            <div class="p-4 border-t border-gray-800">
+                <button onclick="logout()" class="text-[10px] opacity-30 hover:opacity-100 italic">/Logout</button>
+            </div>
         </aside>
 
-        <main id="chatMain" class="flex-1 terminal-box hidden flex-col bg-black">
-            <header class="h-12 border-b border-gray-800 flex items-center justify-between px-4 text-xs font-bold">
-                <div class="flex items-center gap-3">
-                    <i class="fas fa-circle text-[8px] animate-pulse"></i>
-                    <span id="activeNodeName">Idle_Link</span>
+        <main id="chatMain" class="flex-1 terminal-box hidden flex-col">
+            <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-[#050505]">
+                <div class="flex items-center gap-4">
+                    <div class="w-2 h-2 rounded-full bg-[var(--p)]"></div>
+                    <span id="activeNodeName" class="text-xs font-bold tracking-widest uppercase italic">Idle_Link</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="cycleTheme()" class="border border-gray-800 px-2 py-1 hover:border-[var(--p)] transition">THEME</button>
-                    <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 px-2 py-1 text-red-700 hover:bg-red-900 hover:text-white">WIPE_LOG</button>
+                <div class="flex items-center gap-3">
+                    <button onclick="cycleTheme()" class="text-[10px] border border-gray-800 px-3 py-1 hover:border-[var(--p)]">THEME</button>
+                    <button id="wipeBtn" onclick="wipeChat()" class="hidden text-[10px] border border-red-900 text-red-700 px-3 py-1 hover:bg-red-900 hover:text-white">WIPE_LOG</button>
                 </div>
             </header>
 
-            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6 text-sm"></div>
+            <div id="chatBox" class="flex-1 overflow-y-auto p-8">
+                </div>
 
-            <footer class="p-4 border-t border-gray-800 flex gap-3 items-center">
-                <label class="h-input px-4 py-2 cursor-pointer hover:bg-[var(--p)] hover:text-black transition">
-                    <i class="fas fa-camera"></i>
-                    <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
-                </label>
-                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="msg_input: msnd_Text" class="flex-1 h-input p-2">
-                <button onclick="sendText()" class="px-6 py-2 bg-[var(--p)] text-black font-bold uppercase">Exec</button>
+            <footer class="p-6 border-t border-gray-800 bg-[#050505]">
+                <div class="flex gap-4 items-center">
+                    <label class="h-input cursor-pointer p-3 px-5 hover:bg-[var(--p)] hover:text-black transition">
+                        <i class="fas fa-camera"></i>
+                        <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
+                    </label>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="msg_input : msnd_Text" class="flex-1 h-input p-3">
+                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-8 py-3 font-bold uppercase text-sm">Exec</button>
+                </div>
             </footer>
         </main>
     </div>
@@ -112,15 +117,15 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_v3");
+        const col = collection(db, "cipher_node_v4");
 
         let currentUser = null;
         let activeTarget = "mscmkn@mscmkn.com";
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(() => document.getElementById('authError').classList.remove('hidden'));
         window.logout = () => signOut(auth).then(() => location.reload());
 
-        // THEME CYCLER
+        // THEME ENGINE
         const themes = ['theme-cyan', 'theme-green', 'theme-red', 'theme-purple'];
         let tIdx = 0;
         window.cycleTheme = () => {
@@ -132,10 +137,11 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
+                // IMMEDIATELY REVEAL UI
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('sidebar').classList.add('flex');
                 document.getElementById('chatMain').classList.add('flex');
-                document.getElementById('myUserDisplay').innerText = user.email.split('@')[0];
+                document.getElementById('myUserDisplay').innerText = user.email.split('@')[0].toUpperCase();
                 
                 if (user.email === "mscmkn@mscmkn.com") {
                     document.getElementById('wipeBtn').classList.remove('hidden');
@@ -159,8 +165,8 @@
                 targets.forEach(t => {
                     if (t === "mscmkn@mscmkn.com") return;
                     const div = document.createElement('div');
-                    div.className = `p-3 text-[11px] sidebar-item ${activeTarget === t ? 'active-node' : ''}`;
-                    div.innerText = `> ${t.split('@')[0].toUpperCase()}`;
+                    div.className = `node-btn ${activeTarget === t ? 'node-active' : ''}`;
+                    div.innerText = `[NODE] ${t.split('@')[0].toUpperCase()}`;
                     div.onclick = () => startChat(t);
                     list.appendChild(div);
                 });
@@ -169,7 +175,7 @@
 
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = `Active Node: ${target.split('@')[0]}`;
+            document.getElementById('activeNodeName').innerText = `Active_Node // ${target.split('@')[0]}`;
             onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
@@ -179,9 +185,14 @@
                         (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
                         box.innerHTML += `
-                            <div class="${isMe ? 'opacity-40' : 'text-white border-l-2 border-[var(--p)] pl-3'}">
-                                <span class="text-[9px] font-bold uppercase">[${d.sender.split('@')[0]}]:</span><br>
-                                ${d.image ? `<div class="img-container mt-2"><div class="img-icon"><i class="fas fa-camera"></i> IMG</div><img src="${d.image}" class="max-w-[250px]" /></div>` : d.text}
+                            <div class="msg-container ${isMe ? 'opacity-40' : 'text-white'}">
+                                <div class="msg-header">${d.sender.split('@')[0]}</div>
+                                ${d.image ? `
+                                    <div class="img-wrapper mt-2">
+                                        <div class="img-overlay-icon"><i class="fas fa-camera"></i> IMG_NODE</div>
+                                        <img src="${d.image}" class="max-w-xs border border-gray-900" />
+                                    </div>` 
+                                    : `<div class="msg-text">${d.text}</div>`}
                             </div>`;
                     }
                 });
@@ -212,7 +223,7 @@
                 const data = d.data();
                 if ((data.sender === currentUser.email && data.recipient === activeTarget) || 
                     (data.sender === activeTarget && data.recipient === currentUser.email)) {
-                    await deleteDoc(doc(db, "cipher_v3", d.id));
+                    await deleteDoc(doc(db, "cipher_node_v4", d.id));
                 }
             });
         };

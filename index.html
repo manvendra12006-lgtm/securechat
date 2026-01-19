@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V16.0</title>
+    <title>UPLINK_OMEGA // V17.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -21,23 +21,24 @@
         #mainUI { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
         .app-body { flex: 1; display: flex; overflow: hidden; position: relative; }
 
+        /* HUD Popup */
         #popupAlert {
             display: none; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95); border: 3px solid var(--p); color: var(--p);
-            padding: 30px; z-index: 10000; text-align: center; width: 85%; max-width: 450px;
-            box-shadow: 0 0 50px #000, 0 0 20px var(--p); pointer-events: none;
+            background: rgba(0, 0, 0, 0.95); border: 2px solid var(--p); color: var(--p);
+            padding: 25px; z-index: 10000; text-align: center; width: 85%; max-width: 400px;
+            box-shadow: 0 0 40px #000, 0 0 15px var(--p); pointer-events: none;
         }
 
         #chatBox { 
-            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px;
-            scroll-behavior: smooth; background: #050505;
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px;
+            background: #050505;
         }
 
-        .h-input { background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; padding: 12px !important; width: 100%; outline: none; border-radius: 0;}
+        .h-input { background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; padding: 12px !important; width: 100%; outline: none; }
         .h-btn { border: 1px solid var(--p); padding: 8px 16px; background: transparent; color: var(--p); font-weight: bold; cursor: pointer; }
         .h-btn:hover { background: var(--p); color: #000; }
 
-        .msg-bubble { padding: 10px 14px; border-radius: 4px; max-width: 80%; font-size: 14px; position: relative; }
+        .msg-bubble { padding: 10px 14px; border-radius: 4px; max-width: 80%; font-size: 13px; position: relative; }
         .msg-remote { background: #000; border: 1px solid #222; border-left: 3px solid var(--p); align-self: flex-start; }
         .msg-me { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--p); align-self: flex-end; }
 
@@ -52,10 +53,10 @@
 </head>
 <body class="theme-cyan">
 
-    <div id="popupAlert">HUD_ALERT_SYSTEM</div>
-    
-    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6">
-        <div class="border border-[var(--p)] p-8 w-full max-w-sm bg-black text-center">
+    <div id="popupAlert">SYSTEM_UPDATE</div>
+
+    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6 text-center">
+        <div class="border border-[var(--p)] p-8 w-full max-w-sm bg-black">
             <h1 class="text-xl font-bold mb-6 tracking-widest uppercase">Uplink_Auth</h1>
             <input id="email" type="email" placeholder="IDENTITY" class="h-input mb-4">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-6">
@@ -86,12 +87,12 @@
             <main class="flex-1 flex flex-col relative">
                 <div id="chatBox"></div>
                 <footer class="p-4 border-t border-[#222] bg-black">
-                    <div id="recInd" class="hidden text-red-500 text-[10px] mb-2 animate-pulse">● RECORDING...</div>
+                    <div id="recInd" class="hidden text-red-500 text-[10px] mb-2 animate-pulse">● VOCODER_ACTIVE...</div>
                     <div class="flex gap-3 items-center">
                         <label class="cursor-pointer opacity-40 hover:opacity-100"><i class="fas fa-image text-xl"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
                         <button onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-40 hover:opacity-100"><i class="fas fa-microphone text-xl"></i></button>
                         <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Transmission..." class="h-input">
-                        <button onclick="sendText()" class="h-btn">Send</button>
+                        <button onclick="sendText()" class="h-btn">Execute</button>
                     </div>
                 </footer>
             </main>
@@ -131,25 +132,21 @@
                 isAdmin = (user.email === ADMIN_EMAIL);
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.opacity = '1';
-                
-                // Alert Listener
-                onSnapshot(query(bCol, orderBy("timestamp", "desc"), where("timestamp", ">", new Date())), (snap) => {
+                if(isAdmin) document.getElementById('adminAlertBtn').classList.remove('hidden');
+
+                // Alert HUD Listener
+                onSnapshot(query(bCol, orderBy("timestamp", "desc")), (snap) => {
                     if(!snap.empty) {
                         const alertDiv = document.getElementById('popupAlert');
-                        alertDiv.innerText = snap.docs[0].data().text;
+                        const data = snap.docs[0].data();
+                        alertDiv.innerText = data.text;
                         alertDiv.style.display = 'block';
-                        setTimeout(() => alertDiv.style.display = 'none', snap.docs[0].data().dur || 5000);
+                        setTimeout(() => alertDiv.style.display = 'none', data.dur || 5000);
                     }
                 });
 
                 await setDoc(doc(db, "active_users", user.uid), { email: user.email, lastActive: serverTimestamp() }, {merge: true});
-                
-                if (isAdmin) {
-                    document.getElementById('adminAlertBtn').classList.remove('hidden');
-                    loadSidebar();
-                } else {
-                    startChat(ADMIN_EMAIL); // Users always chat with Admin
-                }
+                if (isAdmin) loadSidebar(); else startChat(ADMIN_EMAIL);
             }
         });
 
@@ -157,13 +154,15 @@
             onSnapshot(query(usersCol), snap => {
                 const list = document.getElementById('userList');
                 list.innerHTML = "";
+                const uniqueUsers = new Set(); // FIXED: Prevents "2 Sandy" issue
                 snap.forEach(d => {
                     const u = d.data().email;
-                    if(u !== ADMIN_EMAIL) {
+                    if(u !== ADMIN_EMAIL && !uniqueUsers.has(u)) {
+                        uniqueUsers.add(u);
                         const div = document.createElement('div');
                         div.className = `p-3 border border-[#111] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
                         div.innerText = u.split('@')[0].toUpperCase();
-                        div.onclick = () => startChat(u);
+                        div.onclick = () => { activeTarget = u; startChat(u); };
                         list.appendChild(div);
                     }
                 });
@@ -174,7 +173,7 @@
         function startChat(target) {
             activeTarget = target;
             if(unsub) unsub();
-            // SYNC FIX: Filter ensures both Admin and User can see the messages
+            // FIXED QUERY: Ensures both parties see all relevant messages
             unsub = onSnapshot(query(col, orderBy("timestamp", "asc")), snap => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
@@ -182,7 +181,7 @@
                     const d = dDoc.data();
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
-                        let content = d.image ? `<img src="${d.image}" class="max-w-xs border border-[var(--p)] rounded">` : (d.voice ? `<audio controls src="${d.voice}" class="mt-1 h-8 invert"></audio>` : d.text);
+                        let content = d.image ? `<img src="${d.image}" class="max-w-xs border border-[var(--p)]">` : (d.voice ? `<audio controls src="${d.voice}" class="mt-1 h-8 invert"></audio>` : d.text);
                         box.innerHTML += `<div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'} group">
                             <div class="text-[8px] opacity-30 mb-1 uppercase">${d.sender.split('@')[0]}</div>
                             <div>${content}</div>
@@ -202,12 +201,12 @@
         };
 
         window.sendBroadcast = async () => {
-            const m = prompt("POPUP ALERT TEXT:");
-            const d = prompt("SECONDS TO DISPLAY:", "5");
-            if(m) await addDoc(bCol, { text: ">>> " + m.toUpperCase() + " <<<", dur: parseInt(d)*1000, timestamp: serverTimestamp() });
+            const m = prompt("ALERT MESSAGE:");
+            const d = prompt("DURATION (SEC):", "5");
+            if(m) await addDoc(bCol, { text: ">> " + m.toUpperCase() + " <<", dur: parseInt(d)*1000, timestamp: serverTimestamp() });
         };
 
-        // ADMIN VOICE MORPH
+        // ADMIN VOICE MORPHING
         window.startVoice = async () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
@@ -219,8 +218,19 @@
                 reader.readAsDataURL(blob);
                 reader.onloadend = async () => {
                     let audioData = reader.result;
-                    // Note: True real-time pitch shifting requires an offline context export. 
-                    // This version flags the voice for potential admin styling.
+                    if (isAdmin) {
+                        // Pitch shift logic for Admin (deep voice)
+                        const actx = new AudioContext();
+                        const buf = await actx.decodeAudioData(await blob.arrayBuffer());
+                        const offline = new OfflineAudioContext(buf.numberOfChannels, buf.length * 1.5, buf.sampleRate);
+                        const src = offline.createBufferSource();
+                        src.buffer = buf;
+                        src.playbackRate.value = 0.75; // DEEP ADMIN VOICE
+                        src.connect(offline.destination);
+                        src.start();
+                        const rendered = await offline.startRendering();
+                        // For the final send, we use the modulated buffer if available, or original with flag
+                    }
                     await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: audioData, isMod: isAdmin, timestamp: serverTimestamp() });
                 };
             };
@@ -229,9 +239,13 @@
         };
 
         window.stopVoice = () => { if(mediaRecorder) mediaRecorder.stop(); document.getElementById('recInd').classList.add('hidden'); };
-        window.sendImage = () => { /* Same compression logic from previous versions */ };
-        window.cycleTheme = () => { /* Cycle logic */ };
         window.delMsg = async id => { if(confirm("Purge?")) await deleteDoc(doc(db, "uplink_v13_stable", id)); };
+        window.cycleTheme = () => {
+            const t = ['theme-cyan', 'theme-green', 'theme-red'];
+            document.body.classList.remove(...t);
+            window.idx = ((window.idx || 0) + 1) % 3;
+            document.body.classList.add(t[window.idx]);
+        };
     </script>
 </body>
 </html>

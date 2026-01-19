@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V14.5</title>
+    <title>UPLINK_OMEGA // V14.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -16,52 +16,41 @@
         body { 
             background-color: var(--bg); color: var(--p); 
             font-family: 'Share Tech Mono', monospace; 
-            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            font-size: 15px; 
+            height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* FIXED LAYOUT SYSTEM */
+        #mainUI { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .content-area { flex: 1; display: flex; overflow: hidden; }
+        
+        /* CHAT BOX LOCK */
+        #chatBox { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px;
+            background: #050505;
         }
 
         .h-input { 
-            background: #0a0a0a !important; border: 1px solid #333 !important; color: var(--p) !important; 
+            background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; 
             padding: 12px !important; font-size: 15px !important; width: 100%; outline: none;
-            border-radius: 4px;
         }
-        .h-input:focus { border-color: var(--p) !important; }
 
-        .h-btn { 
-            border: 1px solid var(--p); padding: 8px 16px; text-transform: uppercase; 
-            font-weight: bold; font-size: 13px; transition: 0.2s; cursor: pointer; 
-            background: transparent; color: var(--p);
-        }
+        .h-btn { border: 1px solid var(--p); padding: 8px 16px; font-weight: bold; background: transparent; color: var(--p); cursor: pointer; }
         .h-btn:hover { background: var(--p); color: #000; }
 
-        #broadcastBanner {
-            background: var(--p); color: #000; font-weight: 900;
-            padding: 6px; text-align: center; font-size: 11px;
-            letter-spacing: 2px; display: none;
-        }
-
-        /* Message Area Fix */
-        #chatBox {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column;
-            scroll-behavior: smooth;
-        }
-
-        .msg-bubble { 
-            padding: 10px 14px; border-radius: 6px; max-width: 80%; 
-            line-height: 1.4; position: relative; margin-bottom: 10px;
-        }
-        .msg-remote { background: #0a0a0a; border: 1px solid #222; border-left: 3px solid var(--p); align-self: flex-start; }
+        .msg-bubble { padding: 10px 14px; border-radius: 6px; max-width: 80%; line-height: 1.4; position: relative; }
+        .msg-remote { background: #000; border: 1px solid #222; border-left: 3px solid var(--p); align-self: flex-start; }
         .msg-me { background: rgba(0,242,255,0.05); border: 1px solid var(--p); text-align: right; align-self: flex-end; }
 
         #chatBox::-webkit-scrollbar { width: 4px; }
         #chatBox::-webkit-scrollbar-thumb { background: var(--p); }
 
+        #broadcastBanner { background: var(--p); color: #000; text-align: center; font-size: 11px; padding: 5px; display: none; }
         #imgOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; }
-        
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 80%; background: #000; transition: 0.3s; }
-            #sidebar.open { left: 0; border-right: 2px solid var(--p); }
-        }
     </style>
 </head>
 <body class="theme-cyan">
@@ -69,17 +58,17 @@
     <div id="broadcastBanner">SYSTEM_ALERT</div>
     <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-full max-h-full"></div>
 
-    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6 text-center">
-        <div class="border border-[var(--p)] p-8 w-full max-w-sm">
-            <h1 class="text-xl font-bold mb-6 tracking-widest uppercase border-b border-[var(--p)] pb-4">Uplink_Auth</h1>
+    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6">
+        <div class="border border-[var(--p)] p-8 w-full max-w-sm bg-black">
+            <h1 class="text-xl font-bold mb-6 text-center tracking-widest uppercase">Uplink_Auth</h1>
             <input id="email" type="email" placeholder="EMAIL" class="h-input mb-4">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-6">
             <button onclick="login()" class="w-full h-btn py-3">Login</button>
-            <div id="loginError" class="mt-4 text-red-500 text-[10px] uppercase"></div>
+            <div id="loginError" class="mt-4 text-red-500 text-center text-[10px]"></div>
         </div>
     </div>
 
-    <div id="mainUI" class="flex-1 flex flex-col opacity-0 transition-opacity duration-500">
+    <div id="mainUI" class="opacity-0 transition-opacity duration-500">
         <header class="p-4 border-b border-[#222] bg-black flex justify-between items-center">
             <div class="flex items-center gap-4">
                 <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden text-xl"><i class="fas fa-bars"></i></button>
@@ -91,22 +80,22 @@
             </div>
         </header>
 
-        <div class="flex-1 flex overflow-hidden">
-            <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col bg-black">
+        <div class="content-area">
+            <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col bg-black overflow-y-auto">
                 <div class="p-3 border-b border-[#222] text-[9px] opacity-40 uppercase">active_nodes</div>
-                <div id="userList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
-                <div class="p-3 border-t border-[#222]"><button onclick="logout()" class="opacity-20 text-[10px]">/logoff</button></div>
+                <div id="userList" class="p-2 space-y-2"></div>
+                <div class="p-4 mt-auto"><button onclick="logout()" class="opacity-20 text-[10px]">/logoff</button></div>
             </aside>
 
-            <main class="flex-1 flex flex-col bg-[#050505] relative">
-                <div id="chatBox" class="p-4 md:p-8"></div>
+            <main class="flex-1 flex flex-col relative">
+                <div id="chatBox"></div>
                 
                 <footer class="p-4 border-t border-[#222] bg-black">
                     <div id="recInd" class="hidden text-red-500 text-[9px] mb-2 animate-pulse">● RECORDING...</div>
                     <div class="flex gap-3 items-center">
                         <label class="cursor-pointer opacity-40 hover:opacity-100"><i class="fas fa-image"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
                         <button onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-40 hover:opacity-100"><i class="fas fa-microphone"></i></button>
-                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="h-input">
+                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Enter command..." class="h-input">
                         <button onclick="sendText()" class="h-btn">Send</button>
                     </div>
                 </footer>
@@ -146,10 +135,9 @@
                 currentUser = user;
                 isAdmin = (user.email === ADMIN_EMAIL);
                 document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('mainUI').style.opacity = '1';
+                document.getElementById('mainUI').classList.remove('opacity-0');
                 if(isAdmin) document.getElementById('adminAlert').classList.remove('hidden');
 
-                // Broadcast
                 onSnapshot(query(bCol, orderBy("timestamp", "desc")), (snap) => {
                     if(!snap.empty) {
                         const b = document.getElementById('broadcastBanner');
@@ -173,7 +161,7 @@
                     const div = document.createElement('div');
                     div.className = `p-3 border border-[#111] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
                     div.innerText = u.split('@')[0].toUpperCase();
-                    div.onclick = () => { startChat(u); document.getElementById('sidebar').classList.remove('open'); };
+                    div.onclick = () => startChat(u);
                     list.appendChild(div);
                 });
             });
@@ -197,11 +185,11 @@
                             <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'} group">
                                 <div class="text-[8px] opacity-30 mb-1 uppercase font-bold">${d.sender.split('@')[0]}</div>
                                 <div>${content}</div>
-                                ${isAdmin ? `<button class="hidden group-hover:block text-[8px] text-red-500 mt-2 font-bold" onclick="delMsg('${dDoc.id}')">/PURGE</button>` : ''}
+                                ${isAdmin ? `<button class="hidden group-hover:block text-red-500 text-[8px] mt-2 font-bold" onclick="delMsg('${dDoc.id}')">/PURGE</button>` : ''}
                             </div>`;
                     }
                 });
-                box.scrollTop = box.scrollHeight;
+                box.scrollTo(0, box.scrollHeight);
             });
         }
 

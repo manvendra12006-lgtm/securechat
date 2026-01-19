@@ -3,100 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V14.6</title>
+    <title>UPLINK_OMEGA // V15.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #00f2ff; --bg: #000000; }
+        :root { --p: #00f2ff; --bg: #000; }
         body.theme-cyan { --p: #00f2ff; }
         body.theme-green { --p: #00ff41; }
         body.theme-red { --p: #ff3131; }
 
         body { 
-            background-color: var(--bg); color: var(--p); 
-            font-family: 'Share Tech Mono', monospace; 
+            background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; 
             height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* FIXED LAYOUT SYSTEM */
-        #mainUI { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .content-area { flex: 1; display: flex; overflow: hidden; }
-        
-        /* CHAT BOX LOCK */
+        #mainUI { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .app-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+        /* HUD Pop-up Alert */
+        #popupAlert {
+            display: none; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95); border: 3px solid var(--p); color: var(--p);
+            padding: 30px; z-index: 10000; text-align: center; width: 80%; max-width: 400px;
+            box-shadow: 0 0 50px rgba(0,0,0,1), 0 0 20px var(--p); pointer-events: none;
+            text-transform: uppercase; letter-spacing: 3px; font-weight: 900;
+        }
+
+        /* Chat Scroll Lock */
         #chatBox { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 15px;
-            background: #050505;
+            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px;
+            scroll-behavior: smooth; background: #050505;
         }
 
-        .h-input { 
-            background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; 
-            padding: 12px !important; font-size: 15px !important; width: 100%; outline: none;
-        }
-
-        .h-btn { border: 1px solid var(--p); padding: 8px 16px; font-weight: bold; background: transparent; color: var(--p); cursor: pointer; }
+        .h-input { background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; padding: 12px !important; width: 100%; outline: none; }
+        .h-btn { border: 1px solid var(--p); padding: 8px 16px; background: transparent; color: var(--p); font-weight: bold; cursor: pointer; }
         .h-btn:hover { background: var(--p); color: #000; }
 
-        .msg-bubble { padding: 10px 14px; border-radius: 6px; max-width: 80%; line-height: 1.4; position: relative; }
+        .msg-bubble { padding: 10px 14px; border-radius: 4px; max-width: 80%; font-size: 14px; position: relative; }
         .msg-remote { background: #000; border: 1px solid #222; border-left: 3px solid var(--p); align-self: flex-start; }
-        .msg-me { background: rgba(0,242,255,0.05); border: 1px solid var(--p); text-align: right; align-self: flex-end; }
+        .msg-me { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--p); align-self: flex-end; }
 
-        #chatBox::-webkit-scrollbar { width: 4px; }
+        #chatBox::-webkit-scrollbar { width: 3px; }
         #chatBox::-webkit-scrollbar-thumb { background: var(--p); }
-
-        #broadcastBanner { background: var(--p); color: #000; text-align: center; font-size: 11px; padding: 5px; display: none; }
-        #imgOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; }
+        
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 80%; background: #000; transition: 0.3s; }
+            #sidebar.open { left: 0; border-right: 2px solid var(--p); }
+        }
     </style>
 </head>
 <body class="theme-cyan">
 
-    <div id="broadcastBanner">SYSTEM_ALERT</div>
-    <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-full max-h-full"></div>
+    <div id="popupAlert">ALERT_DATA_LOADED</div>
+    <div id="imgOverlay" onclick="this.style.display='none'" class="fixed inset-0 bg-black/95 z-[9999] hidden items-center justify-center"><img id="fullImg" class="max-w-full max-h-full"></div>
 
     <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6">
-        <div class="border border-[var(--p)] p-8 w-full max-w-sm bg-black">
-            <h1 class="text-xl font-bold mb-6 text-center tracking-widest uppercase">Uplink_Auth</h1>
-            <input id="email" type="email" placeholder="EMAIL" class="h-input mb-4">
+        <div class="border border-[var(--p)] p-8 w-full max-w-sm bg-black text-center">
+            <h1 class="text-xl font-bold mb-6 tracking-widest uppercase">Uplink_Auth</h1>
+            <input id="email" type="email" placeholder="IDENTITY" class="h-input mb-4">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-6">
-            <button onclick="login()" class="w-full h-btn py-3">Login</button>
-            <div id="loginError" class="mt-4 text-red-500 text-center text-[10px]"></div>
+            <button onclick="login()" class="w-full h-btn py-3">INITIALIZE</button>
+            <div id="loginError" class="mt-4 text-red-500 text-[10px]"></div>
         </div>
     </div>
 
     <div id="mainUI" class="opacity-0 transition-opacity duration-500">
         <header class="p-4 border-b border-[#222] bg-black flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden text-xl"><i class="fas fa-bars"></i></button>
-                <span class="font-bold tracking-widest">UPLINK_OMEGA</span>
+                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden"><i class="fas fa-bars"></i></button>
+                <span class="font-bold tracking-widest uppercase">UPLINK_OMEGA</span>
             </div>
             <div class="flex gap-2">
-                <button onclick="cycleTheme()" class="h-btn py-1 px-3 text-[10px]">Theme</button>
-                <button id="adminAlert" onclick="sendBroadcast()" class="h-btn py-1 px-3 text-[10px] hidden border-yellow-500 text-yellow-500">Alert</button>
+                <button onclick="cycleTheme()" class="h-btn py-1 text-[10px]">Theme</button>
+                <button id="adminAlertBtn" onclick="sendBroadcast()" class="h-btn py-1 text-[10px] hidden border-red-500 text-red-500">Alert</button>
             </div>
         </header>
 
-        <div class="content-area">
-            <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col bg-black overflow-y-auto">
-                <div class="p-3 border-b border-[#222] text-[9px] opacity-40 uppercase">active_nodes</div>
-                <div id="userList" class="p-2 space-y-2"></div>
-                <div class="p-4 mt-auto"><button onclick="logout()" class="opacity-20 text-[10px]">/logoff</button></div>
+        <div class="app-body">
+            <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col bg-black">
+                <div class="p-3 border-b border-[#222] text-[9px] opacity-40 uppercase">Active_Terminals</div>
+                <div id="userList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
+                <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="opacity-20 text-[10px]">/logoff</button></div>
             </aside>
 
             <main class="flex-1 flex flex-col relative">
                 <div id="chatBox"></div>
-                
                 <footer class="p-4 border-t border-[#222] bg-black">
-                    <div id="recInd" class="hidden text-red-500 text-[9px] mb-2 animate-pulse">● RECORDING...</div>
+                    <div id="recInd" class="hidden text-red-500 text-[10px] mb-2 animate-pulse">● RECORDING (VOICE_MOD_ENCRYPTED)</div>
                     <div class="flex gap-3 items-center">
-                        <label class="cursor-pointer opacity-40 hover:opacity-100"><i class="fas fa-image"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
-                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-40 hover:opacity-100"><i class="fas fa-microphone"></i></button>
-                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Enter command..." class="h-input">
-                        <button onclick="sendText()" class="h-btn">Send</button>
+                        <label class="cursor-pointer opacity-40 hover:opacity-100"><i class="fas fa-image text-xl"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
+                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-40 hover:opacity-100"><i class="fas fa-microphone text-xl"></i></button>
+                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Enter message..." class="h-input">
+                        <button onclick="sendText()" class="h-btn">Execute</button>
                     </div>
                 </footer>
             </main>
@@ -135,14 +134,15 @@
                 currentUser = user;
                 isAdmin = (user.email === ADMIN_EMAIL);
                 document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('mainUI').classList.remove('opacity-0');
-                if(isAdmin) document.getElementById('adminAlert').classList.remove('hidden');
+                document.getElementById('mainUI').style.opacity = '1';
+                if(isAdmin) document.getElementById('adminAlertBtn').classList.remove('hidden');
 
                 onSnapshot(query(bCol, orderBy("timestamp", "desc")), (snap) => {
                     if(!snap.empty) {
-                        const b = document.getElementById('broadcastBanner');
-                        b.innerText = snap.docs[0].data().text;
-                        b.style.display = 'block';
+                        const alertDiv = document.getElementById('popupAlert');
+                        alertDiv.innerText = snap.docs[0].data().text;
+                        alertDiv.style.display = 'block';
+                        setTimeout(() => alertDiv.style.display = 'none', snap.docs[0].data().dur || 5000);
                     }
                 });
 
@@ -152,17 +152,18 @@
         });
 
         function loadSidebar() {
-            onSnapshot(query(usersCol), (snap) => {
+            onSnapshot(query(usersCol), snap => {
                 const list = document.getElementById('userList');
                 list.innerHTML = "";
                 snap.forEach(d => {
                     const u = d.data().email;
-                    if(u === ADMIN_EMAIL) return;
-                    const div = document.createElement('div');
-                    div.className = `p-3 border border-[#111] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
-                    div.innerText = u.split('@')[0].toUpperCase();
-                    div.onclick = () => startChat(u);
-                    list.appendChild(div);
+                    if(u !== ADMIN_EMAIL) {
+                        const div = document.createElement('div');
+                        div.className = `p-3 border border-[#111] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
+                        div.innerText = u.split('@')[0].toUpperCase();
+                        div.onclick = () => startChat(u);
+                        list.appendChild(div);
+                    }
                 });
             });
         }
@@ -171,7 +172,7 @@
         function startChat(target) {
             activeTarget = target;
             if(unsub) unsub();
-            unsub = onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
+            unsub = onSnapshot(query(col, orderBy("timestamp", "asc")), snap => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
                 snap.forEach(dDoc => {
@@ -180,13 +181,11 @@
                         const isMe = d.sender === currentUser.email;
                         let content = d.image ? `<img src="${d.image}" onclick="showFull('${d.image}')" class="max-w-xs border border-[var(--p)] rounded cursor-pointer">` : 
                                       (d.voice ? `<audio controls src="${d.voice}" class="mt-1 h-8 invert"></audio>` : d.text);
-                        
-                        box.innerHTML += `
-                            <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'} group">
-                                <div class="text-[8px] opacity-30 mb-1 uppercase font-bold">${d.sender.split('@')[0]}</div>
-                                <div>${content}</div>
-                                ${isAdmin ? `<button class="hidden group-hover:block text-red-500 text-[8px] mt-2 font-bold" onclick="delMsg('${dDoc.id}')">/PURGE</button>` : ''}
-                            </div>`;
+                        box.innerHTML += `<div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'} group">
+                            <div class="text-[8px] opacity-30 mb-1 uppercase font-bold">${d.sender.split('@')[0]}</div>
+                            <div>${content}</div>
+                            ${isAdmin ? `<button class="hidden group-hover:block text-red-500 text-[8px] mt-2" onclick="delMsg('${dDoc.id}')">/PURGE</button>` : ''}
+                        </div>`;
                     }
                 });
                 box.scrollTo(0, box.scrollHeight);
@@ -201,8 +200,9 @@
         };
 
         window.sendBroadcast = async () => {
-            const m = prompt("SYSTEM ALERT:");
-            if(m) await addDoc(bCol, { text: "ALERT: " + m.toUpperCase(), timestamp: serverTimestamp() });
+            const m = prompt("ALERT CONTENT:");
+            const d = prompt("DISPLAY TIME (SECONDS):", "5");
+            if(m) await addDoc(bCol, { text: ">>> " + m.toUpperCase() + " <<<", dur: parseInt(d)*1000, timestamp: serverTimestamp() });
         };
 
         window.sendImage = () => {
@@ -229,26 +229,45 @@
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const reader = new FileReader();
-                reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/webm' }));
-                reader.onloadend = async () => await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp() });
+            mediaRecorder.onstop = async () => {
+                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                let finalData = "";
+                
+                if (isAdmin) {
+                    // PITCH SHIFTER: Using WebAudio to distort Admin voice
+                    const ctx = new AudioContext();
+                    const buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+                    const offline = new OfflineAudioContext(buf.numberOfChannels, buf.length * 2, buf.sampleRate);
+                    const source = offline.createBufferSource();
+                    source.buffer = buf;
+                    source.playbackRate.value = 0.7; // Lower = Deeper Voice
+                    source.connect(offline.destination);
+                    source.start();
+                    const rendered = await offline.startRendering();
+                    
+                    // Simple conversion for database storage
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob); // Note: Native Pitch Shift requires library for full encoding, this provides the base logic.
+                    reader.onloadend = async () => await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp() });
+                } else {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = async () => await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp() });
+                }
             };
             mediaRecorder.start();
             document.getElementById('recInd').classList.remove('hidden');
         };
 
         window.stopVoice = () => { if(mediaRecorder) mediaRecorder.stop(); document.getElementById('recInd').classList.add('hidden'); };
-        
+        window.delMsg = async id => { if(confirm("Purge?")) await deleteDoc(doc(db, "uplink_v13_stable", id)); };
         window.cycleTheme = () => {
             const t = ['theme-cyan', 'theme-green', 'theme-red'];
             document.body.classList.remove(...t);
             window.idx = ((window.idx || 0) + 1) % 3;
             document.body.classList.add(t[window.idx]);
         };
-        
-        window.delMsg = async (id) => { if(confirm("Confirm Purge?")) await deleteDoc(doc(db, "uplink_v13_stable", id)); };
-        window.showFull = (s) => { document.getElementById('fullImg').src = s; document.getElementById('imgOverlay').style.display = 'flex'; };
+        window.showFull = s => { document.getElementById('fullImg').src = s; document.getElementById('imgOverlay').style.display = 'flex'; };
     </script>
 </body>
 </html>

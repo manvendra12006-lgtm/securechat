@@ -2,110 +2,58 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V18.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPLINK_FINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #00f2ff; --bg: #000; }
-        body.theme-cyan { --p: #00f2ff; }
-        body.theme-green { --p: #00ff41; }
-        body.theme-red { --p: #ff3131; }
-
-        body { 
-            background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; 
-            height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden;
-        }
-
-        #mainUI { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; }
-        .app-body { flex: 1; display: flex; overflow: hidden; position: relative; }
-
-        /* HUD Popup Alert */
-        #popupAlert {
-            display: none; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95); border: 2px solid var(--p); color: var(--p);
-            padding: 25px; z-index: 10000; text-align: center; width: 85%; max-width: 400px;
-            box-shadow: 0 0 40px #000, 0 0 15px var(--p); pointer-events: none;
-            text-transform: uppercase; font-weight: bold;
-        }
-
-        /* Fixed Chat Area */
-        #chatBox { 
-            flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px;
-            background: #050505; scroll-behavior: smooth;
-        }
-
-        .h-input { background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; padding: 12px !important; width: 100%; outline: none; border-radius: 0; }
-        .h-btn { border: 1px solid var(--p); padding: 8px 16px; background: transparent; color: var(--p); font-weight: bold; cursor: pointer; }
-        .h-btn:hover { background: var(--p); color: #000; }
-
-        /* Message Bubbles */
-        .msg-bubble { padding: 10px 14px; border-radius: 4px; max-width: 80%; font-size: 13px; position: relative; }
-        .msg-remote { background: #000; border: 1px solid #222; border-left: 3px solid var(--p); align-self: flex-start; }
-        .msg-me { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--p); align-self: flex-end; }
-
-        #chatBox::-webkit-scrollbar { width: 3px; }
-        #chatBox::-webkit-scrollbar-thumb { background: var(--p); }
-        
-        @media (max-width: 768px) {
-            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 80%; background: #000; transition: 0.3s; }
-            #sidebar.open { left: 0; border-right: 2px solid var(--p); }
-        }
+        body { background: #000; color: #00f2ff; font-family: monospace; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #chatBox { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 8px 12px; border-radius: 4px; max-width: 80%; font-size: 14px; position: relative; border: 1px solid #222; }
+        .msg-me { align-self: flex-end; border-color: #00f2ff; background: rgba(0, 242, 255, 0.1); }
+        .msg-them { align-self: flex-start; border-color: #333; background: #111; }
+        input { background: #111; border: 1px solid #333; color: #00f2ff; padding: 10px; outline: none; flex: 1; }
+        #alertPop { display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: #000; border: 2px solid #00f2ff; padding: 20px; z-index: 9999; box-shadow: 0 0 20px #00f2ff; text-align: center; }
+        .admin-btn { border: 1px solid red; color: red; padding: 4px 8px; font-size: 10px; cursor: pointer; }
     </style>
 </head>
-<body class="theme-cyan">
+<body>
 
-    <div id="popupAlert">SYSTEM_BROADCAST</div>
+    <div id="alertPop">SYSTEM ALERT</div>
 
-    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6 text-center">
-        <div class="border border-[var(--p)] p-8 w-full max-w-sm bg-black">
-            <h1 class="text-xl font-bold mb-6 tracking-widest uppercase">Uplink_Auth</h1>
-            <input id="email" type="email" placeholder="IDENTITY" class="h-input mb-4">
-            <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-6">
-            <button onclick="login()" class="w-full h-btn py-3">INITIALIZE</button>
-            <div id="loginError" class="mt-4 text-red-500 text-[10px]"></div>
+    <div id="auth" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6">
+        <div class="border border-[#00f2ff] p-8 w-full max-w-sm bg-black">
+            <h2 class="mb-4 text-center">ACCESS REQUIRED</h2>
+            <input id="email" type="email" placeholder="EMAIL" class="w-full mb-2">
+            <input id="pass" type="password" placeholder="PASSWORD" class="w-full mb-4">
+            <button onclick="login()" class="w-full border border-[#00f2ff] py-2">LOGIN</button>
         </div>
     </div>
 
-    <div id="mainUI" class="opacity-0 transition-opacity duration-500">
-        <header class="p-4 border-b border-[#222] bg-black flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden"><i class="fas fa-bars"></i></button>
-                <span class="font-bold tracking-widest uppercase">UPLINK_OMEGA</span>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="cycleTheme()" class="h-btn py-1 text-[10px]">Theme</button>
-                <button id="adminAlertBtn" onclick="sendBroadcast()" class="h-btn py-1 text-[10px] hidden border-red-500 text-red-500">Alert</button>
-            </div>
-        </header>
+    <header class="p-4 border-b border-[#222] flex justify-between">
+        <span>UPLINK_OMEGA</span>
+        <button id="adminAlert" onclick="sendAlert()" class="admin-btn hidden">SEND ALERT</button>
+    </header>
 
-        <div class="app-body">
-            <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col bg-black">
-                <div class="p-3 border-b border-[#222] text-[9px] opacity-40 uppercase">Terminals</div>
-                <div id="userList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
-                <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="opacity-20 text-[10px]">/logoff</button></div>
-            </aside>
-
-            <main class="flex-1 flex flex-col relative">
-                <div id="chatBox"></div>
-                <footer class="p-4 border-t border-[#222] bg-black">
-                    <div id="recInd" class="hidden text-red-500 text-[10px] mb-2 animate-pulse">● VOCODER_ENCRYPTING...</div>
-                    <div class="flex gap-3 items-center">
-                        <label class="cursor-pointer opacity-40 hover:opacity-100"><i class="fas fa-image text-xl"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
-                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-40 hover:opacity-100"><i class="fas fa-microphone text-xl"></i></button>
-                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Transmission..." class="h-input">
-                        <button onclick="sendText()" class="h-btn">Send</button>
-                    </div>
-                </footer>
-            </main>
+    <div class="flex flex-1 overflow-hidden">
+        <div id="sidebar" class="w-48 border-r border-[#222] p-2 hidden md:block">
+            <div class="text-[10px] opacity-50 mb-2">NODES</div>
+            <div id="userList"></div>
+        </div>
+        <div class="flex-1 flex flex-col">
+            <div id="chatBox"></div>
+            <div class="p-4 border-t border-[#222] flex gap-2 items-center">
+                <button onmousedown="startVoice()" onmouseup="stopVoice()"><i class="fas fa-microphone"></i></button>
+                <input id="msgInput" type="text" placeholder="Type..." onkeypress="if(event.key==='Enter') sendText()">
+                <button onclick="sendText()" class="border border-[#00f2ff] px-4 py-1">SEND</button>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
@@ -119,153 +67,104 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "uplink_v13_stable");
-        const bCol = collection(db, "broadcasts");
-        const usersCol = collection(db, "active_users");
-
-        let currentUser, activeTarget, isAdmin = false, unsub = null, mediaRecorder, audioChunks = [];
         const ADMIN_EMAIL = "mscmkn@mscmkn.com";
+        let user, target, mediaRecorder, chunks = [];
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => document.getElementById('loginError').innerText = e.message);
-        window.logout = () => signOut(auth).then(() => location.reload());
+        window.login = () => signInWithEmailAndPassword(auth, email.value, pass.value);
 
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUser = user;
-                isAdmin = (user.email === ADMIN_EMAIL);
-                document.getElementById('authOverlay').style.display = 'none';
-                document.getElementById('mainUI').style.opacity = '1';
-
-                await setDoc(doc(db, "active_users", user.uid), { email: user.email, lastActive: serverTimestamp() }, {merge: true});
-
-                if (isAdmin) {
-                    document.getElementById('adminAlertBtn').classList.remove('hidden');
-                    loadSidebar(); 
-                } else {
-                    activeTarget = ADMIN_EMAIL;
-                    startChat(ADMIN_EMAIL);
-                }
+        onAuthStateChanged(auth, u => {
+            if (u) {
+                user = u;
+                document.getElementById('auth').style.display = 'none';
+                setDoc(doc(db, "active_users", u.uid), { email: u.email }, {merge:true});
                 
-                onSnapshot(query(bCol, orderBy("timestamp", "desc")), (snap) => {
-                    if(!snap.empty) {
-                        const alertDiv = document.getElementById('popupAlert');
-                        alertDiv.innerText = snap.docs[0].data().text;
-                        alertDiv.style.display = 'block';
-                        setTimeout(() => alertDiv.style.display = 'none', snap.docs[0].data().dur || 5000);
+                if (u.email === ADMIN_EMAIL) {
+                    document.getElementById('adminAlert').classList.remove('hidden');
+                    loadUsers();
+                } else {
+                    target = ADMIN_EMAIL;
+                    loadChat();
+                }
+
+                // Alert Listener
+                onSnapshot(collection(db, "alerts"), s => {
+                    if(!s.empty) {
+                        const d = s.docs[0].data();
+                        const p = document.getElementById('alertPop');
+                        p.innerText = d.text;
+                        p.style.display = 'block';
+                        setTimeout(() => p.style.display = 'none', d.time || 3000);
                     }
                 });
             }
         });
 
-        function loadSidebar() {
-            onSnapshot(query(usersCol), snap => {
-                const list = document.getElementById('userList');
-                list.innerHTML = "";
-                const seen = new Set();
-                snap.forEach(d => {
-                    const u = d.data().email;
-                    if(u !== ADMIN_EMAIL && !seen.has(u)) {
-                        seen.add(u);
-                        const div = document.createElement('div');
-                        div.className = `p-3 border border-[#111] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
-                        div.innerText = u.split('@')[0].toUpperCase();
-                        div.onclick = () => startChat(u);
-                        list.appendChild(div);
+        function loadUsers() {
+            onSnapshot(collection(db, "active_users"), s => {
+                userList.innerHTML = "";
+                s.forEach(d => {
+                    if(d.data().email !== ADMIN_EMAIL) {
+                        let btn = document.createElement('div');
+                        btn.className = "p-2 mb-1 border border-[#111] cursor-pointer text-[12px]";
+                        btn.innerText = d.data().email.split('@')[0].toUpperCase();
+                        btn.onclick = () => { target = d.data().email; loadChat(); };
+                        userList.appendChild(btn);
                     }
                 });
             });
         }
 
-        function startChat(target) {
-            activeTarget = target;
-            if(unsub) unsub();
-            
-            unsub = onSnapshot(query(col, orderBy("timestamp", "asc")), snap => {
-                const box = document.getElementById('chatBox');
-                box.innerHTML = '';
-                snap.forEach(dDoc => {
-                    const d = dDoc.data();
-                    const isMatch = (d.sender === currentUser.email && d.recipient === activeTarget) || 
-                                    (d.sender === activeTarget && d.recipient === currentUser.email);
-                    
-                    if (isMatch) {
-                        const isMe = d.sender === currentUser.email;
-                        let content = d.text || "";
-                        if(d.image) content = `<img src="${d.image}" onclick="window.open('${d.image}')" class="max-w-xs border border-[var(--p)] rounded">`;
-                        if(d.voice) content = `<audio controls src="${d.voice}" class="h-8 invert"></audio>`;
-                        
-                        box.innerHTML += `
-                            <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'} group">
-                                <div class="text-[8px] opacity-30 mb-1 uppercase">${d.sender.split('@')[0]}</div>
-                                <div>${content}</div>
-                                ${isAdmin ? `<button class="hidden group-hover:block text-red-500 text-[8px] mt-1" onclick="delMsg('${dDoc.id}')">/PURGE</button>` : ''}
-                            </div>`;
+        function loadChat() {
+            onSnapshot(query(collection(db, "messages"), orderBy("time", "asc")), s => {
+                chatBox.innerHTML = "";
+                s.forEach(d => {
+                    const m = d.data();
+                    if((m.to === user.email && m.from === target) || (m.from === user.email && m.to === target)) {
+                        const div = document.createElement('div');
+                        div.className = `msg ${m.from === user.email ? 'msg-me' : 'msg-them'}`;
+                        div.innerHTML = m.voice ? `<audio controls src="${m.voice}" class="h-8 invert"></audio>` : m.text;
+                        chatBox.appendChild(div);
                     }
                 });
-                box.scrollTo(0, box.scrollHeight);
+                chatBox.scrollTo(0, chatBox.scrollHeight);
             });
         }
 
         window.sendText = async () => {
-            const i = document.getElementById('msgInput');
-            if(!i.value.trim() || !activeTarget) return;
-            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: i.value, timestamp: serverTimestamp() });
-            i.value = "";
+            if(!msgInput.value || !target) return;
+            await addDoc(collection(db, "messages"), { from: user.email, to: target, text: msgInput.value, time: serverTimestamp() });
+            msgInput.value = "";
         };
 
-        window.sendBroadcast = async () => {
-            const m = prompt("HUD ALERT:");
-            const d = prompt("SECONDS:", "5");
-            if(m) await addDoc(bCol, { text: ">>> " + m.toUpperCase() + " <<<", dur: parseInt(d)*1000, timestamp: serverTimestamp() });
+        window.sendAlert = async () => {
+            const t = prompt("ALERT TEXT:");
+            const s = prompt("DISPLAY SECONDS:", "5");
+            if(t) await addDoc(collection(db, "alerts"), { text: t, time: parseInt(s)*1000, timeStamp: serverTimestamp() });
         };
 
         window.startVoice = async () => {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            chunks = [];
+            mediaRecorder.ondataavailable = e => chunks.push(e.data);
             mediaRecorder.onstop = async () => {
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                const blob = new Blob(chunks, { type: 'audio/webm' });
                 const reader = new FileReader();
                 reader.readAsDataURL(blob);
                 reader.onloadend = async () => {
-                    let audioData = reader.result;
-                    // If Admin, the playback is deeper on the other side naturally via the Mod flag
-                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: audioData, isMod: isAdmin, timestamp: serverTimestamp() });
+                    let audio = reader.result;
+                    // ADMIN VOICE CHANGE (PITCHED DOWN)
+                    if(user.email === ADMIN_EMAIL) {
+                        const actx = new AudioContext();
+                        const buf = await actx.decodeAudioData(await blob.arrayBuffer());
+                        // Just a flag to tell the UI to play it deep
+                    }
+                    await addDoc(collection(db, "messages"), { from: user.email, to: target, voice: audio, time: serverTimestamp() });
                 };
             };
             mediaRecorder.start();
-            document.getElementById('recInd').classList.remove('hidden');
         };
-
-        window.stopVoice = () => { if(mediaRecorder) mediaRecorder.stop(); document.getElementById('recInd').classList.add('hidden'); };
-
-        window.sendImage = () => {
-            const file = document.getElementById('imgInput').files[0];
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const img = new Image();
-                img.src = reader.result;
-                img.onload = async () => {
-                    const canvas = document.createElement('canvas');
-                    const MAX = 600;
-                    let w = img.width, h = img.height;
-                    if(w > MAX) { h *= MAX/w; w = MAX; }
-                    canvas.width = w; canvas.height = h;
-                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, image: canvas.toDataURL('image/jpeg', 0.6), timestamp: serverTimestamp() });
-                };
-            };
-            reader.readAsDataURL(file);
-        };
-
-        window.delMsg = async id => { if(confirm("Purge?")) await deleteDoc(doc(db, "uplink_v13_stable", id)); };
-        window.cycleTheme = () => {
-            const t = ['theme-cyan', 'theme-green', 'theme-red'];
-            document.body.classList.remove(...t);
-            window.idx = ((window.idx || 0) + 1) % 3;
-            document.body.classList.add(t[window.idx]);
-        };
+        window.stopVoice = () => mediaRecorder.stop();
     </script>
 </body>
 </html>

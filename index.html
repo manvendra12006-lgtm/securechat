@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V14.0</title>
+    <title>UPLINK_OMEGA // V14.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -17,40 +17,42 @@
             background-color: var(--bg); color: var(--p); 
             font-family: 'Share Tech Mono', monospace; 
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            font-size: 16px; /* Slightly smaller, more refined font */
+            font-size: 15px; 
         }
 
-        /* Refined Inputs */
         .h-input { 
-            background: #0a0a0a !important; border: 2px solid #222 !important; color: var(--p) !important; 
-            padding: 14px !important; font-size: 16px !important; width: 100%; outline: none;
+            background: #0a0a0a !important; border: 1px solid #333 !important; color: var(--p) !important; 
+            padding: 12px !important; font-size: 15px !important; width: 100%; outline: none;
             border-radius: 4px;
         }
         .h-input:focus { border-color: var(--p) !important; }
 
         .h-btn { 
-            border: 1px solid var(--p); padding: 10px 20px; text-transform: uppercase; 
-            font-weight: bold; font-size: 14px; transition: 0.2s; cursor: pointer; 
+            border: 1px solid var(--p); padding: 8px 16px; text-transform: uppercase; 
+            font-weight: bold; font-size: 13px; transition: 0.2s; cursor: pointer; 
             background: transparent; color: var(--p);
         }
         .h-btn:hover { background: var(--p); color: #000; }
 
-        /* Broadcast Banner */
         #broadcastBanner {
             background: var(--p); color: #000; font-weight: 900;
-            padding: 8px; text-align: center; font-size: 12px;
+            padding: 6px; text-align: center; font-size: 11px;
             letter-spacing: 2px; display: none;
         }
 
-        /* Balanced Chat Bubbles */
-        .msg-bubble { 
-            padding: 12px 16px; border-radius: 8px; max-width: 80%; 
-            font-size: 15px; line-height: 1.4; position: relative;
+        /* Message Area Fix */
+        #chatBox {
+            flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+            scroll-behavior: smooth;
         }
-        .msg-remote { background: #111; border: 1px solid #333; border-left: 4px solid var(--p); }
-        .msg-me { background: rgba(0,242,255,0.08); border: 1px solid var(--p); text-align: right; }
 
-        /* Scrollbar Styling */
+        .msg-bubble { 
+            padding: 10px 14px; border-radius: 6px; max-width: 80%; 
+            line-height: 1.4; position: relative; margin-bottom: 10px;
+        }
+        .msg-remote { background: #0a0a0a; border: 1px solid #222; border-left: 3px solid var(--p); align-self: flex-start; }
+        .msg-me { background: rgba(0,242,255,0.05); border: 1px solid var(--p); text-align: right; align-self: flex-end; }
+
         #chatBox::-webkit-scrollbar { width: 4px; }
         #chatBox::-webkit-scrollbar-thumb { background: var(--p); }
 
@@ -64,47 +66,47 @@
 </head>
 <body class="theme-cyan">
 
-    <div id="broadcastBanner" class="animate-pulse">SYSTEM_ALERT: ALL_NODES_ENCRYPTED</div>
+    <div id="broadcastBanner">SYSTEM_ALERT</div>
     <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-full max-h-full"></div>
 
-    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6">
-        <div class="border-2 border-[var(--p)] bg-black p-8 w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-8 text-center uppercase tracking-widest border-b border-[var(--p)] pb-4">CORE_LOGIN</h1>
+    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6 text-center">
+        <div class="border border-[var(--p)] p-8 w-full max-w-sm">
+            <h1 class="text-xl font-bold mb-6 tracking-widest uppercase border-b border-[var(--p)] pb-4">Uplink_Auth</h1>
             <input id="email" type="email" placeholder="EMAIL" class="h-input mb-4">
-            <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-8">
-            <button onclick="login()" class="w-full h-btn py-4">INITIALIZE</button>
-            <div id="loginError" class="mt-4 text-red-500 text-center text-xs uppercase"></div>
+            <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-6">
+            <button onclick="login()" class="w-full h-btn py-3">Login</button>
+            <div id="loginError" class="mt-4 text-red-500 text-[10px] uppercase"></div>
         </div>
     </div>
 
     <div id="mainUI" class="flex-1 flex flex-col opacity-0 transition-opacity duration-500">
-        <header class="p-4 border-b-2 border-[#111] bg-black flex justify-between items-center">
+        <header class="p-4 border-b border-[#222] bg-black flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
-                <span class="font-bold tracking-widest text-lg">UPLINK_OMEGA</span>
+                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden text-xl"><i class="fas fa-bars"></i></button>
+                <span class="font-bold tracking-widest">UPLINK_OMEGA</span>
             </div>
             <div class="flex gap-2">
                 <button onclick="cycleTheme()" class="h-btn py-1 px-3 text-[10px]">Theme</button>
-                <button id="adminBroadcast" onclick="sendBroadcast()" class="h-btn py-1 px-3 text-[10px] hidden border-yellow-500 text-yellow-500">Alert</button>
+                <button id="adminAlert" onclick="sendBroadcast()" class="h-btn py-1 px-3 text-[10px] hidden border-yellow-500 text-yellow-500">Alert</button>
             </div>
         </header>
 
         <div class="flex-1 flex overflow-hidden">
-            <aside id="sidebar" class="w-72 border-r-2 border-[#111] flex flex-col bg-black">
-                <div class="p-4 border-b border-[#111] text-[10px] opacity-40 uppercase">active_nodes</div>
+            <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col bg-black">
+                <div class="p-3 border-b border-[#222] text-[9px] opacity-40 uppercase">active_nodes</div>
                 <div id="userList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
-                <div class="p-4 border-t border-[#111]"><button onclick="logout()" class="opacity-30 text-xs">/terminate</button></div>
+                <div class="p-3 border-t border-[#222]"><button onclick="logout()" class="opacity-20 text-[10px]">/logoff</button></div>
             </aside>
 
-            <main class="flex-1 flex flex-col bg-[#050505]">
-                <div id="chatBox" class="flex-1 overflow-y-auto p-6 md:p-10 space-y-6"></div>
+            <main class="flex-1 flex flex-col bg-[#050505] relative">
+                <div id="chatBox" class="p-4 md:p-8"></div>
                 
-                <footer class="p-4 border-t-2 border-[#111] bg-black">
-                    <div id="recIndicator" class="hidden text-red-500 text-[10px] mb-2 animate-pulse">● RECORDING_VOICE...</div>
+                <footer class="p-4 border-t border-[#222] bg-black">
+                    <div id="recInd" class="hidden text-red-500 text-[9px] mb-2 animate-pulse">● RECORDING...</div>
                     <div class="flex gap-3 items-center">
-                        <label class="p-3 cursor-pointer opacity-50 hover:opacity-100"><i class="fas fa-image text-xl"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
-                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="p-3 opacity-50 hover:opacity-100"><i class="fas fa-microphone text-xl"></i></button>
-                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Message..." class="flex-1 h-input">
+                        <label class="cursor-pointer opacity-40 hover:opacity-100"><i class="fas fa-image"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
+                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-40 hover:opacity-100"><i class="fas fa-microphone"></i></button>
+                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="h-input">
                         <button onclick="sendText()" class="h-btn">Send</button>
                     </div>
                 </footer>
@@ -115,7 +117,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
@@ -145,14 +147,14 @@
                 isAdmin = (user.email === ADMIN_EMAIL);
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.opacity = '1';
-                if(isAdmin) document.getElementById('adminBroadcast').classList.remove('hidden');
+                if(isAdmin) document.getElementById('adminAlert').classList.remove('hidden');
 
-                // Listen for Broadcasts
+                // Broadcast
                 onSnapshot(query(bCol, orderBy("timestamp", "desc")), (snap) => {
                     if(!snap.empty) {
-                        const banner = document.getElementById('broadcastBanner');
-                        banner.innerText = snap.docs[0].data().text;
-                        banner.style.display = 'block';
+                        const b = document.getElementById('broadcastBanner');
+                        b.innerText = snap.docs[0].data().text;
+                        b.style.display = 'block';
                     }
                 });
 
@@ -177,11 +179,11 @@
             });
         }
 
-        let chatUnsub = null;
+        let unsub = null;
         function startChat(target) {
             activeTarget = target;
-            if(chatUnsub) chatUnsub();
-            chatUnsub = onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
+            if(unsub) unsub();
+            unsub = onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
                 snap.forEach(dDoc => {
@@ -192,29 +194,27 @@
                                       (d.voice ? `<audio controls src="${d.voice}" class="mt-1 h-8 invert"></audio>` : d.text);
                         
                         box.innerHTML += `
-                            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
-                                <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'}">
-                                    <div class="text-[9px] opacity-40 mb-1 uppercase">${d.sender.split('@')[0]}</div>
-                                    ${content}
-                                </div>
+                            <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'} group">
+                                <div class="text-[8px] opacity-30 mb-1 uppercase font-bold">${d.sender.split('@')[0]}</div>
+                                <div>${content}</div>
+                                ${isAdmin ? `<button class="hidden group-hover:block text-[8px] text-red-500 mt-2 font-bold" onclick="delMsg('${dDoc.id}')">/PURGE</button>` : ''}
                             </div>`;
                     }
                 });
-                // AUTO-SCROLL FIX
-                setTimeout(() => { box.scrollTop = box.scrollHeight; }, 100);
+                box.scrollTop = box.scrollHeight;
             });
         }
 
         window.sendText = async () => {
-            const input = document.getElementById('msgInput');
-            if(!input.value.trim()) return;
-            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: input.value, timestamp: serverTimestamp() });
-            input.value = "";
+            const i = document.getElementById('msgInput');
+            if(!i.value.trim()) return;
+            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: i.value, timestamp: serverTimestamp() });
+            i.value = "";
         };
 
         window.sendBroadcast = async () => {
-            const msg = prompt("ENTER SYSTEM BROADCAST:");
-            if(msg) await addDoc(bCol, { text: "ALERT: " + msg.toUpperCase(), timestamp: serverTimestamp() });
+            const m = prompt("SYSTEM ALERT:");
+            if(m) await addDoc(bCol, { text: "ALERT: " + m.toUpperCase(), timestamp: serverTimestamp() });
         };
 
         window.sendImage = () => {
@@ -247,16 +247,19 @@
                 reader.onloadend = async () => await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp() });
             };
             mediaRecorder.start();
-            document.getElementById('recIndicator').classList.remove('hidden');
+            document.getElementById('recInd').classList.remove('hidden');
         };
 
-        window.stopVoice = () => { if(mediaRecorder) mediaRecorder.stop(); document.getElementById('recIndicator').classList.add('hidden'); };
+        window.stopVoice = () => { if(mediaRecorder) mediaRecorder.stop(); document.getElementById('recInd').classList.add('hidden'); };
+        
         window.cycleTheme = () => {
-            const themes = ['theme-cyan', 'theme-green', 'theme-red'];
-            document.body.classList.remove(themes[0], themes[1], themes[2]);
-            window.tIdx = ((window.tIdx || 0) + 1) % 3;
-            document.body.classList.add(themes[window.tIdx]);
+            const t = ['theme-cyan', 'theme-green', 'theme-red'];
+            document.body.classList.remove(...t);
+            window.idx = ((window.idx || 0) + 1) % 3;
+            document.body.classList.add(t[window.idx]);
         };
+        
+        window.delMsg = async (id) => { if(confirm("Confirm Purge?")) await deleteDoc(doc(db, "uplink_v13_stable", id)); };
         window.showFull = (s) => { document.getElementById('fullImg').src = s; document.getElementById('imgOverlay').style.display = 'flex'; };
     </script>
 </body>

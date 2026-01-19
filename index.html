@@ -3,98 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V12.2_FINAL</title>
+    <title>UPLINK // COMMAND_CENTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --p: #00f2ff; --bg: #030a0a; --panel: rgba(5, 15, 15, 0.95); }
+        :root { --p: #00f2ff; --bg: #050505; }
+        body.theme-cyan { --p: #00f2ff; }
+        body.theme-green { --p: #00ff41; }
+        body.theme-red { --p: #ff3131; }
+
         body { 
-            background: #000; color: var(--p); font-family: 'Share Tech Mono', monospace; 
-            overflow: hidden; height: 100vh; margin: 0;
+            background-color: var(--bg); color: var(--p); 
+            font-family: 'Share Tech Mono', monospace; 
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
+
+        /* Large, readable text */
+        .text-main { font-size: 1.1rem; line-height: 1.5; }
+        .terminal-border { border: 2px solid var(--p); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
         
-        /* CRT Scanline Overlay */
-        body::before {
-            content: ""; position: fixed; inset: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
-            background-size: 100% 3px, 3px 100%; z-index: 100; pointer-events: none;
-        }
-
-        .hud-border {
-            border: 1px solid var(--p);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
-            background: var(--panel); position: relative;
-        }
-
-        .glitch { animation: glitch-anim 3s infinite linear alternate-reverse; }
-        @keyframes glitch-anim {
-            0% { text-shadow: -1px 0 #ff00c1; }
-            50% { text-shadow: 1px 0 #00fff9; transform: scale(1.001); }
-            100% { text-shadow: -0.5px 0 #ff00c1; }
-        }
-
-        .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 10px; }
-        .online { background: #00ff41; box-shadow: 0 0 8px #00ff41; }
+        /* Interactive Elements */
+        .h-btn { border: 1px solid var(--p); padding: 8px 16px; text-transform: uppercase; font-weight: bold; transition: 0.2s; cursor: pointer; }
+        .h-btn:hover { background: var(--p); color: #000; }
         
-        #broadcast-banner {
-            display: none; background: #ff3131; color: white; padding: 8px;
-            text-align: center; font-size: 11px; font-weight: bold;
-            border-bottom: 2px solid white; animation: blink 0.8s infinite;
+        .h-input { 
+            background: #000; border: 2px solid #222; color: var(--p); 
+            padding: 15px; font-size: 16px; width: 100%; outline: none;
         }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } }
+        .h-input:focus { border-color: var(--p); }
 
-        #chatBox::-webkit-scrollbar { width: 3px; }
+        #chatBox::-webkit-scrollbar { width: 6px; }
         #chatBox::-webkit-scrollbar-thumb { background: var(--p); }
 
-        .voice-rec-active { color: #ff3131 !important; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } }
-        
+        /* Message Bubbles */
+        .msg-bubble { 
+            padding: 12px 18px; border-radius: 4px; max-width: 85%; 
+            position: relative; margin-bottom: 4px;
+        }
+        .msg-remote { background: rgba(255,255,255,0.05); border-left: 4px solid var(--p); }
+        .msg-me { background: rgba(0,242,255,0.1); border-right: 4px solid var(--p); text-align: right; }
+
+        /* Full Image View */
         #imgOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; }
+        
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 80%; background: #000; transition: 0.3s; }
+            #sidebar.open { left: 0; border-right: 2px solid var(--p); }
+        }
     </style>
 </head>
-<body class="flex flex-col p-2 md:p-4">
+<body class="theme-cyan">
 
-    <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-[95%] max-h-[95%] border border-[var(--p)]"></div>
-    <div id="broadcast-banner">SYSTEM_ALERT: BROADCAST_INCOMING</div>
+    <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-full max-h-full"></div>
 
-    <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6">
-        <div class="hud-border p-10 w-full max-w-md text-center">
-            <h1 class="text-3xl font-bold mb-8 glitch tracking-widest uppercase">Uplink_Omega</h1>
-            <input id="email" type="email" placeholder="NODE_ID" class="w-full p-4 mb-4 bg-transparent border-b border-[var(--p)] outline-none text-center">
-            <input id="pass" type="password" placeholder="PASSKEY" class="w-full p-4 mb-8 bg-transparent border-b border-[var(--p)] outline-none text-center">
-            <button onclick="login()" class="w-full py-4 border border-[var(--p)] hover:bg-[var(--p)] hover:text-black font-bold uppercase transition-all">Authorize</button>
+    <div id="authOverlay" class="fixed inset-0 bg-[#050505] z-[5000] flex items-center justify-center p-4">
+        <div class="terminal-border bg-black p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-6 text-center border-b border-[var(--p)] pb-4">CORE_ACCESS</h2>
+            <input id="email" type="email" placeholder="EMAIL_ID" class="h-input mb-4">
+            <input id="pass" type="password" placeholder="PASS_KEY" class="h-input mb-6">
+            <button onclick="login()" class="w-full h-btn text-lg">Initialize</button>
         </div>
     </div>
 
-    <div id="mainUI" class="flex-1 flex flex-col gap-3 opacity-0 transition-opacity duration-1000">
+    <div id="mainUI" class="flex-1 flex flex-col opacity-0 transition-opacity duration-500">
         
-        <header class="flex justify-between items-center px-2">
-            <div class="text-[9px] tracking-[0.4em] uppercase">Status: <span class="text-green-500">Encrypted</span></div>
-            <div class="text-lg font-bold glitch tracking-[0.3em]">SECURE_NODE_V12.2</div>
-            <div id="adminTools" class="hidden flex gap-2">
-                <button onclick="sendBroadcast()" class="text-[8px] border border-red-500 px-3 py-1 text-red-500">BROADCAST</button>
-                <button onclick="wipeChat()" class="text-[8px] border border-[var(--p)] px-3 py-1">WIPE_NODE</button>
+        <header class="p-4 border-b-2 border-[#111] bg-black flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+                <span class="font-bold tracking-widest hidden sm:block">UPLINK_V13</span>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="cycleTheme()" class="h-btn text-xs">Theme</button>
+                <button id="adminWipe" onclick="wipeChat()" class="h-btn text-xs border-red-500 text-red-500 hidden">Wipe</button>
             </div>
         </header>
 
-        <div class="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
-            <aside id="sidebar" class="hud-border w-full md:w-72 flex flex-col">
-                <div class="p-4 border-b border-[#111] text-[10px] opacity-50 uppercase">Active_Terminals</div>
-                <div id="userList" class="flex-1 overflow-y-auto p-2"></div>
-                <div class="p-4 border-t border-[#111]"><button onclick="logout()" class="text-[8px] opacity-30 hover:opacity-100 transition-all">/TERMINATE_SESSION</button></div>
+        <div class="flex-1 flex overflow-hidden">
+            <aside id="sidebar" class="w-72 border-r-2 border-[#111] flex flex-col bg-black">
+                <div class="p-4 border-b border-[#111] text-[10px] opacity-50">ACTIVE_NODES</div>
+                <div id="userList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
+                <div class="p-4"><button onclick="logout()" class="opacity-30 text-xs">/terminate</button></div>
             </aside>
 
-            <main class="hud-border flex-1 flex flex-col overflow-hidden">
-                <div id="activeNodeTag" class="p-2 bg-[rgba(0,242,255,0.05)] text-[10px] border-b border-[#111] text-center uppercase tracking-widest">Awaiting_Connection...</div>
-                <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
+            <main class="flex-1 flex flex-col bg-[#080808]">
+                <div id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6"></div>
                 
-                <footer class="p-4 border-t border-[#111]">
-                    <div class="flex gap-4 items-center">
-                        <label class="cursor-pointer opacity-50 hover:opacity-100"><i class="fas fa-paperclip"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
-                        <button id="voiceBtn" onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-50 hover:opacity-100"><i class="fas fa-microphone"></i></button>
-                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="flex-1 bg-transparent outline-none text-sm tracking-widest">
-                        <button onclick="sendText()" class="text-[10px] font-bold uppercase hover:text-white transition-all">Execute</button>
+                <footer class="p-4 border-t-2 border-[#111] bg-black">
+                    <div id="recIndicator" class="hidden text-red-500 text-xs mb-2 animate-pulse">● RECORDING_VOICE...</div>
+                    <div class="flex gap-3 items-center">
+                        <label class="p-3 cursor-pointer opacity-70 hover:opacity-100">
+                            <i class="fas fa-image text-xl"></i>
+                            <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
+                        </label>
+                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="p-3 opacity-70 hover:opacity-100">
+                            <i class="fas fa-microphone text-xl"></i>
+                        </button>
+                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type message..." class="flex-1 h-input">
+                        <button onclick="sendText()" class="h-btn">Send</button>
                     </div>
                 </footer>
             </main>
@@ -118,18 +124,13 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "uplink_v12_final");
+        const col = collection(db, "uplink_v13_stable");
         const usersCol = collection(db, "active_users");
-        const bcastCol = collection(db, "broadcasts");
 
         let currentUser, activeTarget, isAdmin = false, mediaRecorder, audioChunks = [];
         const ADMIN_EMAIL = "mscmkn@mscmkn.com";
 
-        // Obfuscation (Base64)
-        const encrypt = (t) => btoa(unescape(encodeURIComponent(t)));
-        const decrypt = (t) => decodeURIComponent(escape(atob(t)));
-
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert("ACCESS_DENIED"));
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
         window.logout = () => signOut(auth).then(() => location.reload());
 
         onAuthStateChanged(auth, async (user) => {
@@ -138,28 +139,14 @@
                 isAdmin = (user.email === ADMIN_EMAIL);
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.opacity = '1';
-                if(isAdmin) document.getElementById('adminTools').classList.remove('hidden');
+                if(isAdmin) document.getElementById('adminWipe').classList.remove('hidden');
 
-                // Ghost Heartbeat
-                setInterval(() => {
-                    setDoc(doc(db, "active_users", user.uid), { email: user.email, lastActive: serverTimestamp() }, {merge: true});
-                }, 20000);
-
-                // Broadcast Listener
-                onSnapshot(query(bcastCol, orderBy("timestamp", "desc")), (s) => {
-                    if(!s.empty) {
-                        const b = document.getElementById('broadcast-banner');
-                        b.innerText = "ALERT: " + s.docs[0].data().text;
-                        b.style.display = 'block';
-                        setTimeout(() => b.style.display = 'none', 8000);
-                    }
-                });
-
-                if (isAdmin) loadAdminUI(); else startChat(ADMIN_EMAIL);
+                await setDoc(doc(db, "active_users", user.uid), { email: user.email, lastActive: serverTimestamp() }, {merge: true});
+                if (isAdmin) loadSidebar(); else startChat(ADMIN_EMAIL);
             }
         });
 
-        function loadAdminUI() {
+        function loadSidebar() {
             onSnapshot(query(usersCol), (snap) => {
                 const list = document.getElementById('userList');
                 list.innerHTML = "";
@@ -167,9 +154,9 @@
                     const u = d.data().email;
                     if(u === ADMIN_EMAIL) return;
                     const div = document.createElement('div');
-                    div.className = `p-4 mb-2 border border-[#111] cursor-pointer text-[10px] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
-                    div.innerHTML = `<span class="status-dot online"></span> ${u.toUpperCase()}`;
-                    div.onclick = () => startChat(u);
+                    div.className = `p-4 border border-[#222] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
+                    div.innerText = u.toUpperCase();
+                    div.onclick = () => { startChat(u); document.getElementById('sidebar').classList.remove('open'); };
                     list.appendChild(div);
                 });
             });
@@ -178,7 +165,6 @@
         let chatUnsub = null;
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeTag').innerText = `Uplink_Established: ${target}`;
             if(chatUnsub) chatUnsub();
             chatUnsub = onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
@@ -188,19 +174,18 @@
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
                         let content = "";
-                        if(d.image) content = `<img src="${d.image}" onclick="showFull('${d.image}')" class="max-w-xs border border-[var(--p)] mt-2">`;
-                        else if(d.voice) content = `<audio controls src="${d.voice}" class="mt-2 h-8 invert opacity-70"></audio>`;
-                        else content = `<div class="mt-1">${decrypt(d.text)}</div>`;
+                        if(d.image) content = `<img src="${d.image}" onclick="showFull('${d.image}')" class="max-w-xs border border-[var(--p)] rounded cursor-zoom-in">`;
+                        else if(d.voice) content = `<audio controls src="${d.voice}" class="mt-2 h-10 invert"></audio>`;
+                        else content = `<div class="text-main">${d.text}</div>`;
                         
                         box.innerHTML += `
-                            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} group relative">
-                                <div class="max-w-[85%] ${isMe ? 'text-right' : 'text-left border-l border-[var(--p)] pl-4'}">
-                                    <div class="text-[7px] opacity-30 uppercase">${d.sender.split('@')[0]}</div>
+                            <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                                <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'}">
+                                    <div class="text-[9px] opacity-40 mb-1 uppercase">${d.sender.split('@')[0]}</div>
                                     ${content}
-                                    ${isAdmin ? `<span class="hidden group-hover:block text-[8px] text-red-500 absolute -top-4 right-0 cursor-pointer" onclick="delMsg('${dDoc.id}')">/PURGE</span>` : ''}
+                                    ${isAdmin ? `<div class="text-[9px] text-red-500 mt-2 cursor-pointer" onclick="delMsg('${dDoc.id}')">DELETE</div>` : ''}
                                 </div>
                             </div>`;
-                    }
                 });
                 box.scrollTop = box.scrollHeight;
             });
@@ -209,7 +194,7 @@
         window.sendText = async () => {
             const input = document.getElementById('msgInput');
             if(!input.value.trim()) return;
-            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: encrypt(input.value), timestamp: serverTimestamp() });
+            await addDoc(col, { sender: currentUser.email, recipient: activeTarget, text: input.value, timestamp: serverTimestamp() });
             input.value = "";
         };
 
@@ -244,24 +229,29 @@
                 const reader = new FileReader();
                 reader.readAsDataURL(blob);
                 reader.onloadend = async () => {
-                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp(), adminVoice: isAdmin });
+                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp() });
                 };
             };
             mediaRecorder.start();
-            document.getElementById('voiceBtn').classList.add('voice-rec-active');
+            document.getElementById('recIndicator').classList.remove('hidden');
         };
 
         window.stopVoice = () => {
-            mediaRecorder.stop();
-            document.getElementById('voiceBtn').classList.remove('voice-rec-active');
+            if(mediaRecorder) mediaRecorder.stop();
+            document.getElementById('recIndicator').classList.add('hidden');
         };
 
-        window.sendBroadcast = async () => {
-            const m = prompt("BROADCAST MESSAGE:");
-            if(m) await addDoc(bcastCol, { text: m.toUpperCase(), timestamp: serverTimestamp() });
+        // Theme Switcher
+        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
+        let tIdx = 0;
+        window.cycleTheme = () => {
+            document.body.classList.remove(themes[tIdx]);
+            tIdx = (tIdx + 1) % themes.length;
+            document.body.classList.add(themes[tIdx]);
         };
 
-        window.delMsg = async (id) => { if(confirm("PURGE?")) await deleteDoc(doc(db, "uplink_v12_final", id)); };
+        window.delMsg = async (id) => { if(confirm("Purge message?")) await deleteDoc(doc(db, "uplink_v13_stable", id)); };
+        window.wipeChat = async () => { if(confirm("Wipe entire conversation?")) { /* Add wipe logic here if needed */ } };
         window.showFull = (s) => { document.getElementById('fullImg').src = s; document.getElementById('imgOverlay').style.display = 'flex'; };
     </script>
 </body>

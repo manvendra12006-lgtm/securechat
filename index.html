@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CIPHER_NODE // FINAL_PATCH</title>
+    <title>CIPHER_NODE // CORE_RESTORED</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
@@ -16,74 +15,83 @@
         body { background: var(--bg); color: var(--p); font-family: 'Share Tech Mono', monospace; overflow: hidden; }
         .terminal-border { border: 1px solid #333; }
         .h-input { background: #000; border: 1px solid #333; color: var(--p); outline: none; font-size: 16px; }
-        #videoGrid { display: none; position: fixed; inset: 0; background: #000; z-index: 5000; flex-direction: column; }
-        #remoteVideo { width: 100%; height: 100%; object-fit: cover; background: #050505; }
-        #localVideo { position: absolute; bottom: 100px; right: 20px; width: 110px; height: 150px; border: 2px solid var(--p); z-index: 5001; transform: scaleX(-1); }
-        .controls { height: 90px; display: flex; gap: 20px; align-items: center; justify-content: center; background: #000; border-top: 1px solid #333; }
-        #incomingOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 6000; align-items: center; justify-content: center; flex-direction: column; border: 4px solid var(--p); }
+        
+        /* Chat Styling */
+        #chatBox::-webkit-scrollbar { width: 4px; }
+        #chatBox::-webkit-scrollbar-thumb { background: #333; }
+        .msg-blob { max-width: 85%; word-wrap: break-word; }
+        .img-container { position: relative; cursor: zoom-in; transition: transform 0.2s; }
+        .img-container:hover { transform: scale(1.02); }
+        
+        /* Fullscreen Image Preview */
+        #imgOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9000; align-items: center; justify-content: center; padding: 20px; }
+        #imgOverlay img { max-width: 100%; max-height: 100%; border: 1px solid var(--p); }
+
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; transition: 0.3s; width: 85%; background: #000; }
+            #sidebar.open { left: 0; }
+        }
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col theme-cyan">
 
-    <div id="incomingOverlay">
-        <h2 class="text-2xl mb-2 animate-pulse">INCOMING_UPLINK</h2>
-        <p id="callerName" class="mb-10 opacity-60"></p>
-        <div class="flex gap-6">
-            <button id="acceptBtn" class="bg-[var(--p)] text-black px-10 py-4 font-bold uppercase">Connect</button>
-            <button onclick="endCall()" class="bg-red-900 text-white px-10 py-4 font-bold uppercase">Reject</button>
-        </div>
-    </div>
-
-    <div id="videoGrid">
-        <div class="flex-1 relative overflow-hidden">
-            <video id="remoteVideo" autoplay playsinline></video>
-            <video id="localVideo" autoplay muted playsinline></video>
-        </div>
-        <div class="controls">
-            <button onclick="toggleMute()" id="muteBtn" class="border border-[var(--p)] px-6 py-2 text-xs">MUTE</button>
-            <button onclick="endCall()" class="bg-red-900 text-white px-8 py-2 font-bold">TERMINATE</button>
-        </div>
+    <div id="imgOverlay" onclick="this.style.display='none'">
+        <img id="fullImg" src="" alt="PREVIEW">
     </div>
 
     <div id="authOverlay" class="fixed inset-0 bg-[#0d0d0d] flex items-center justify-center z-[2000] p-4">
         <div class="terminal-border p-8 w-full max-w-sm bg-black">
-            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 text-center">Cipher_Gate</h1>
-            <input id="email" type="email" placeholder="EMAIL" class="h-input w-full p-4 mb-3">
+            <h1 class="text-2xl font-bold tracking-widest mb-6 border-b border-[var(--p)] pb-2 text-center uppercase">Cipher_Gate</h1>
+            <input id="email" type="email" placeholder="IDENTITY_EMAIL" class="h-input w-full p-4 mb-3">
             <input id="pass" type="password" placeholder="PASSKEY" class="h-input w-full p-4 mb-6">
             <button onclick="login()" class="w-full bg-[var(--p)] text-black font-bold py-4 uppercase">Authorize</button>
         </div>
     </div>
 
-    <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0 transition-opacity">
-        <aside id="sidebar" class="w-72 terminal-border flex flex-col bg-black h-full">
-            <div class="p-4 border-b border-[#222]"><p id="myUserDisplay" class="text-sm font-bold truncate">---</p></div>
+    <div id="mainUI" class="flex flex-1 overflow-hidden opacity-0 transition-opacity duration-500">
+        <aside id="sidebar" class="w-72 terminal-border flex flex-col bg-black h-full border-r">
+            <div class="p-4 border-b border-[#222] bg-[#050505]">
+                <p class="text-[9px] opacity-40 uppercase">Operator_Node</p>
+                <p id="myUserDisplay" class="text-sm font-bold truncate">---</p>
+            </div>
             <div id="userList" class="flex-1 overflow-y-auto p-3 space-y-1"></div>
-            <div class="p-4 border-t border-[#222]"><button onclick="logout()" class="text-[10px] opacity-30">/Terminate</button></div>
+            <div class="p-4 border-t border-[#222]">
+                <button onclick="logout()" class="text-[10px] opacity-30 italic">/Terminate_Session</button>
+            </div>
         </aside>
 
         <main class="flex-1 flex flex-col bg-black min-w-0">
             <header class="h-14 border-b border-[#222] flex items-center justify-between px-4 bg-[#080808]">
-                <span id="activeNodeName" class="text-xs font-bold uppercase">IDLE</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden border border-[#333] px-2 py-1">☰</button>
+                    <span id="activeNodeName" class="text-xs font-bold uppercase tracking-widest">Idle</span>
+                </div>
                 <div class="flex gap-2">
-                    <button id="callBtn" onclick="startCall(true)" class="hidden border border-[var(--p)] px-3 py-1 text-[10px] font-bold">VIDEO</button>
-                    <button onclick="cycleTheme()" class="border border-[#333] px-3 py-1 text-[10px]">THEME</button>
-                    <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 text-red-700 px-3 py-1 text-[10px]">WIPE</button>
+                    <button onclick="cycleTheme()" class="border border-[#333] px-3 py-1 text-[10px] uppercase">Theme</button>
+                    <button id="wipeBtn" onclick="wipeChat()" class="hidden border border-red-900 text-red-700 px-3 py-1 text-[10px] uppercase">Wipe</button>
                 </div>
             </header>
-            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-4"></div>
-            <footer class="p-3 border-t border-[#222]"><div class="flex gap-2">
-                <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Command..." class="flex-1 h-input p-3 text-sm">
-                <button onclick="sendText()" class="bg-[var(--p)] text-black px-6 font-bold uppercase text-xs">Exec</button>
-            </div></footer>
+
+            <div id="chatBox" class="flex-1 overflow-y-auto p-6 space-y-6"></div>
+
+            <footer class="p-4 border-t border-[#222] bg-[#050505]">
+                <div class="flex gap-3">
+                    <label class="h-input p-4 cursor-pointer flex items-center justify-center w-14">
+                        <i class="fas fa-camera"></i>
+                        <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
+                    </label>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Type command..." class="flex-1 h-input p-4 text-sm">
+                    <button onclick="sendText()" class="bg-[var(--p)] text-black px-8 font-bold uppercase text-xs">Execute</button>
+                </div>
+            </footer>
         </main>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, setDoc, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG (SAME AS BEFORE)
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
             authDomain: "private--chat-4f6c4.firebaseapp.com",
@@ -96,14 +104,13 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const col = collection(db, "cipher_ultra_v7");
-        const signals = collection(db, "call_signals");
+        const col = collection(db, "cipher_restore_v8");
         const usersCol = collection(db, "active_users");
 
-        let currentUser, activeTarget, peer, localStream, currentCall;
+        let currentUser, activeTarget;
         const cleanID = (email) => email.toLowerCase().replace(/[^a-z0-9]/g, "");
 
-        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value);
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => alert(e.message));
         window.logout = () => signOut(auth).then(() => location.reload());
 
         onAuthStateChanged(auth, async (user) => {
@@ -113,98 +120,11 @@
                 document.getElementById('mainUI').style.opacity = '1';
                 document.getElementById('myUserDisplay').innerText = user.email;
                 await setDoc(doc(db, "active_users", cleanID(user.email)), { email: user.email, lastActive: serverTimestamp() });
-
-                peer = new Peer(cleanID(user.email), {
-                    config: {'iceServers': [{ 'urls': 'stun:stun.l.google.com:19302' }]}
-                });
-
-                // When Peer receives a call naturally
-                peer.on('call', (call) => incomingCallUI(call));
-
-                // BACKUP SIGNAL: For when PeerJS signaling is slow
-                onSnapshot(query(signals, where("recipient", "==", user.email)), (snap) => {
-                    snap.forEach(d => {
-                        if(d.data().status === "pending") {
-                            document.getElementById('callerName').innerText = d.data().sender;
-                            document.getElementById('incomingOverlay').style.display = 'flex';
-                        }
-                    });
-                });
-
+                
                 loadUsers();
                 if (user.email !== "mscmkn@mscmkn.com") startChat("mscmkn@mscmkn.com");
             }
         });
-
-        // FIXED CONNECT LOGIC
-        function incomingCallUI(call) {
-            const overlay = document.getElementById('incomingOverlay');
-            overlay.style.display = 'flex';
-            
-            document.getElementById('acceptBtn').onclick = async () => {
-                try {
-                    // 1. Get media FIRST (Must be inside the click handler for mobile)
-                    localStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-                    
-                    // 2. Hide UI
-                    overlay.style.display = 'none';
-                    document.getElementById('videoGrid').style.display = 'flex';
-                    
-                    // 3. Set local stream
-                    document.getElementById('localVideo').srcObject = localStream;
-                    
-                    // 4. Answer the call
-                    call.answer(localStream);
-                    handleCall(call);
-                    
-                    // 5. Cleanup signal
-                    const q = await getDocs(query(signals, where("recipient", "==", currentUser.email)));
-                    q.forEach(async d => await deleteDoc(doc(db, "call_signals", d.id)));
-                } catch(e) {
-                    alert("CAMERA_ERROR: Check browser permissions!");
-                }
-            };
-        }
-
-        window.startCall = async (isVideo) => {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({video: isVideo, audio: true});
-                document.getElementById('localVideo').srcObject = localStream;
-                document.getElementById('videoGrid').style.display = 'flex';
-                
-                // Alert the other user via Firebase
-                await addDoc(signals, { sender: currentUser.email, recipient: activeTarget, status: "pending", timestamp: serverTimestamp() });
-                
-                const call = peer.call(cleanID(activeTarget), localStream, {metadata: isVideo});
-                handleCall(call);
-            } catch(e) { alert("Media blocked!"); }
-        };
-
-        function handleCall(call) {
-            currentCall = call;
-            call.on('stream', (remoteStream) => {
-                const r = document.getElementById('remoteVideo');
-                r.srcObject = remoteStream;
-                r.onloadedmetadata = () => r.play();
-            });
-            call.on('close', endCall);
-        }
-
-        window.endCall = () => {
-            document.getElementById('incomingOverlay').style.display = 'none';
-            if(currentCall) currentCall.close();
-            if(localStream) localStream.getTracks().forEach(t => t.stop());
-            document.getElementById('videoGrid').style.display = 'none';
-        };
-
-        // THEME & CHAT LOGIC (SAME AS PREVIOUS)
-        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
-        let tIdx = 0;
-        window.cycleTheme = () => {
-            document.body.classList.remove(themes[tIdx]);
-            tIdx = (tIdx + 1) % themes.length;
-            document.body.classList.add(themes[tIdx]);
-        };
 
         function loadUsers() {
             onSnapshot(query(usersCol), (snap) => {
@@ -214,7 +134,7 @@
                     const u = d.data().email;
                     if(u === currentUser.email) return;
                     const div = document.createElement('div');
-                    div.className = `p-3 text-xs border border-[#222] cursor-pointer ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
+                    div.className = `p-3 text-xs border border-[#222] cursor-pointer ${activeTarget === u ? 'bg-[var(--p)] text-black' : 'hover:border-[var(--p)]'}`;
                     div.innerText = `> ${u.toUpperCase()}`;
                     div.onclick = () => startChat(u);
                     list.appendChild(div);
@@ -222,19 +142,26 @@
             });
         }
 
+        let chatUnsub = null;
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeNodeName').innerText = target;
-            document.getElementById('callBtn').classList.remove('hidden');
-            onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
+            document.getElementById('activeNodeName').innerText = `NODE: ${target.toUpperCase()}`;
+            if(currentUser.email === "mscmkn@mscmkn.com") document.getElementById('wipeBtn').classList.remove('hidden');
+            
+            if(chatUnsub) chatUnsub();
+            chatUnsub = onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
                 box.innerHTML = '';
                 snap.forEach(doc => {
                     const d = doc.data();
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || (d.sender === activeTarget && d.recipient === currentUser.email)) {
-                        box.innerHTML += `<div class="${d.sender === currentUser.email ? 'ml-auto text-right opacity-50' : 'text-left border-l-2 border-[var(--p)] pl-3'}">
-                            <div class="text-[9px] font-bold">[${d.sender.split('@')[0]}]</div>
-                            <div>${d.text}</div>
+                        const isMe = d.sender === currentUser.email;
+                        const content = d.image ? `<div class="img-container mt-2" onclick="showFullImg('${d.image}')"><img src="${d.image}" class="max-w-full rounded border border-[#333]"></div>` : `<div class="mt-1">${d.text}</div>`;
+                        box.innerHTML += `<div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                            <div class="msg-blob ${isMe ? 'text-right opacity-80' : 'text-left border-l border-[var(--p)] pl-3'}">
+                                <div class="text-[9px] font-bold tracking-tighter opacity-40 uppercase">${d.sender.split('@')[0]}</div>
+                                ${content}
+                            </div>
                         </div>`;
                     }
                 });
@@ -249,14 +176,53 @@
             input.value = "";
         };
 
+        window.sendImage = () => {
+            const file = document.getElementById('imgInput').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const img = new Image();
+                img.src = reader.result;
+                img.onload = async () => {
+                    // Canvas compression for large images
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1200;
+                    const scale = MAX_WIDTH / img.width;
+                    canvas.width = MAX_WIDTH;
+                    canvas.height = img.height * scale;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, image: compressedData, timestamp: serverTimestamp() });
+                };
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.showFullImg = (src) => {
+            document.getElementById('fullImg').src = src;
+            document.getElementById('imgOverlay').style.display = 'flex';
+        };
+
         window.wipeChat = async () => {
+            if(!confirm("WIPE LOGS?")) return;
             const snap = await getDocs(query(col));
             snap.forEach(async (d) => {
                 const data = d.data();
                 if ((data.sender === currentUser.email && data.recipient === activeTarget) || (data.sender === activeTarget && data.recipient === currentUser.email)) {
-                    await deleteDoc(doc(db, "cipher_ultra_v7", d.id));
+                    await deleteDoc(doc(db, "cipher_restore_v8", d.id));
                 }
             });
+        };
+
+        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
+        let tIdx = 0;
+        window.cycleTheme = () => {
+            document.body.classList.remove(themes[tIdx]);
+            tIdx = (tIdx + 1) % themes.length;
+            document.body.classList.add(themes[tIdx]);
         };
     </script>
 </body>

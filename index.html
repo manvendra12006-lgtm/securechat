@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V20.0</title>
+    <title>UPLINK_OMEGA // FINAL_STABLE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -18,77 +18,78 @@
             height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden;
         }
 
+        /* HUD Popup Alert - Centered Over Chat */
+        #popupAlert {
+            display: none; position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95); border: 3px solid var(--p); color: var(--p);
+            padding: 40px; z-index: 10000; text-align: center; width: 80%; max-width: 500px;
+            box-shadow: 0 0 50px #000, 0 0 20px var(--p); pointer-events: none;
+            text-transform: uppercase; letter-spacing: 4px; font-weight: 900;
+        }
+
         #chatBox { 
             flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px;
             background: #050505; scroll-behavior: smooth;
         }
 
-        /* HUD Popup Alert */
-        #popupAlert {
-            display: none; position: fixed; top: 25%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9); border: 2px solid var(--p); color: var(--p);
-            padding: 30px; z-index: 10000; text-align: center; width: 80%; max-width: 450px;
-            box-shadow: 0 0 30px var(--p); pointer-events: none; text-transform: uppercase;
-        }
-
-        .h-input { background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; padding: 12px !important; width: 100%; outline: none; }
-        .h-btn { border: 1px solid var(--p); padding: 8px 16px; background: transparent; color: var(--p); font-weight: bold; cursor: pointer; }
+        .h-input { background: #111 !important; border: 1px solid #333 !important; color: var(--p) !important; padding: 12px !important; width: 100%; outline: none; border-radius: 0; }
+        .h-btn { border: 1px solid var(--p); padding: 8px 16px; background: transparent; color: var(--p); font-weight: bold; cursor: pointer; text-transform: uppercase; }
         .h-btn:hover { background: var(--p); color: #000; }
 
-        .msg { padding: 10px 14px; border-radius: 4px; max-width: 80%; font-size: 14px; border: 1px solid #222; position: relative; }
-        .msg-me { align-self: flex-end; border-color: var(--p); background: rgba(0, 242, 255, 0.05); }
-        .msg-them { align-self: flex-start; border-color: #333; background: #111; }
+        .msg-bubble { padding: 10px 14px; border-radius: 4px; max-width: 80%; font-size: 14px; position: relative; border: 1px solid #222; }
+        .msg-remote { background: #000; border-left: 4px solid var(--p); align-self: flex-start; }
+        .msg-me { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--p); align-self: flex-end; }
 
-        #imgOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:9999; align-items:center; justify-content:center; }
+        #imgOverlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:9999; align-items:center; justify-content:center; }
         
         @media (max-width: 768px) {
-            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 70%; background: #000; transition: 0.3s; border-right: 1px solid var(--p); }
+            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 80%; background: #000; transition: 0.3s; border-right: 2px solid var(--p); }
             #sidebar.open { left: 0; }
         }
     </style>
 </head>
 <body class="theme-cyan">
 
-    <div id="popupAlert">SYSTEM_SIGNAL_LOST</div>
-    <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-[90%] max-h-[90%]"></div>
+    <div id="popupAlert">DATA_TRANSMISSION</div>
+    <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-[95%] max-h-[95%] border-2 border-[var(--p)]"></div>
 
     <div id="auth" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6 text-center">
-        <div class="border border-[var(--p)] p-8 w-full max-w-sm bg-black">
-            <h1 class="text-xl mb-6 tracking-widest uppercase">Uplink_Auth</h1>
+        <div class="border-2 border-[var(--p)] p-10 w-full max-w-sm bg-black shadow-[0_0_20px_var(--p)]">
+            <h1 class="text-2xl mb-8 tracking-[10px] uppercase font-bold">UPLINK</h1>
             <input id="email" type="email" placeholder="IDENTITY" class="h-input mb-4 text-center">
-            <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-6 text-center">
-            <button onclick="login()" class="w-full h-btn py-3">INITIALIZE</button>
-            <div id="loginErr" class="mt-4 text-red-500 text-[10px]"></div>
+            <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-8 text-center">
+            <button onclick="login()" class="w-full h-btn py-4">INITIALIZE</button>
+            <div id="loginErr" class="mt-4 text-red-500 text-[10px] uppercase tracking-widest"></div>
         </div>
     </div>
 
-    <header class="p-4 border-b border-[#222] bg-black flex justify-between items-center">
+    <header class="p-4 border-b-2 border-[#222] bg-black flex justify-between items-center">
         <div class="flex items-center gap-4">
             <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden"><i class="fas fa-bars"></i></button>
-            <span class="font-bold tracking-widest">UPLINK_OMEGA</span>
+            <span class="font-bold tracking-[4px] text-lg">UPLINK_OMEGA</span>
         </div>
-        <div class="flex gap-2">
-            <button onclick="cycleTheme()" class="h-btn py-1 text-[10px]">THEME</button>
-            <button id="adminAlertBtn" onclick="sendAlert()" class="h-btn py-1 text-[10px] hidden border-red-500 text-red-500">ALERT</button>
+        <div class="flex gap-3">
+            <button onclick="cycleTheme()" class="h-btn py-1 text-[10px]">Theme</button>
+            <button id="adminAlertBtn" onclick="sendAlert()" class="h-btn py-1 text-[10px] hidden border-red-500 text-red-500">Global Alert</button>
         </div>
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-        <aside id="sidebar" class="w-64 border-r border-[#222] flex flex-col bg-black">
-            <div class="p-3 border-b border-[#222] text-[9px] opacity-40 uppercase">Terminals</div>
+        <aside id="sidebar" class="w-64 border-r-2 border-[#222] flex flex-col bg-black">
+            <div class="p-4 border-b border-[#222] text-[10px] opacity-40 uppercase tracking-widest">Active_Nodes</div>
             <div id="userList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
-            <div class="p-4 border-t border-[#222] text-center"><button onclick="logout()" class="opacity-20 text-[10px] hover:opacity-100">/LOGOFF</button></div>
+            <div class="p-4 border-t border-[#222] text-center"><button onclick="logout()" class="opacity-30 text-[10px] hover:opacity-100 hover:text-red-500 transition-all uppercase">/ Disconnect</button></div>
         </aside>
 
-        <main class="flex-1 flex flex-col">
+        <main class="flex-1 flex flex-col relative">
             <div id="chatBox"></div>
-            <footer class="p-4 border-t border-[#222] bg-black">
-                <div id="recInd" class="hidden text-red-500 text-[10px] mb-2 animate-pulse">● VOCODER_ENCRYPTING...</div>
+            <footer class="p-4 border-t-2 border-[#222] bg-black">
+                <div id="recInd" class="hidden text-red-500 text-[10px] mb-2 animate-pulse font-bold tracking-widest">● VOCODER_ENCRYPTING_SIGNAL...</div>
                 <div class="flex gap-3 items-center">
                     <label class="cursor-pointer opacity-40 hover:opacity-100"><i class="fas fa-image text-xl"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
                     <button onmousedown="startVoice()" onmouseup="stopVoice()" class="opacity-40 hover:opacity-100"><i class="fas fa-microphone text-xl"></i></button>
-                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Transmission..." class="h-input">
-                    <button onclick="sendText()" class="h-btn">SEND</button>
+                    <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Enter transmission..." class="h-input">
+                    <button onclick="sendText()" class="h-btn px-8">Execute</button>
                 </div>
             </footer>
         </main>
@@ -97,7 +98,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
@@ -114,14 +115,14 @@
         const ADMIN_EMAIL = "mscmkn@mscmkn.com";
         let user, target, unsub, mediaRecorder, chunks = [];
 
-        window.login = () => signInWithEmailAndPassword(auth, email.value, pass.value).catch(e => loginErr.innerText = e.message);
+        window.login = () => signInWithEmailAndPassword(auth, email.value, pass.value).catch(e => loginErr.innerText = "AUTH_FAILED: " + e.message);
         window.logout = () => signOut(auth).then(() => location.reload());
 
         onAuthStateChanged(auth, u => {
             if (u) {
                 user = u;
                 document.getElementById('auth').style.display = 'none';
-                setDoc(doc(db, "active_users", u.uid), { email: u.email }, {merge:true});
+                setDoc(doc(db, "active_users", u.uid), { email: u.email, lastSeen: serverTimestamp() }, {merge:true});
                 
                 if (u.email === ADMIN_EMAIL) {
                     document.getElementById('adminAlertBtn').classList.remove('hidden');
@@ -131,7 +132,7 @@
                     loadChat();
                 }
 
-                // HUD Alert Listener
+                // Global Alert Pop-up Listener
                 onSnapshot(collection(db, "alerts"), s => {
                     if(!s.empty) {
                         const d = s.docs[0].data();
@@ -146,17 +147,18 @@
 
         function loadUsers() {
             onSnapshot(collection(db, "active_users"), s => {
-                userList.innerHTML = "";
-                let seen = new Set(); // FIXED: Prevents "2 Sandy" issue
+                const list = document.getElementById('userList');
+                list.innerHTML = "";
+                let seen = new Set();
                 s.forEach(d => {
                     const uEmail = d.data().email;
                     if(uEmail !== ADMIN_EMAIL && !seen.has(uEmail)) {
                         seen.add(uEmail);
                         let btn = document.createElement('div');
-                        btn.className = `p-3 border border-[#111] cursor-pointer text-[12px] ${target === uEmail ? 'bg-[var(--p)] text-black font-bold' : ''}`;
-                        btn.innerText = uEmail.split('@')[0].toUpperCase();
+                        btn.className = `p-3 border border-[#222] cursor-pointer text-[12px] uppercase tracking-widest transition-all ${target === uEmail ? 'bg-[var(--p)] text-black font-bold border-[var(--p)]' : 'hover:border-[var(--p)]'}`;
+                        btn.innerText = uEmail.split('@')[0];
                         btn.onclick = () => { target = uEmail; loadChat(); loadUsers(); };
-                        userList.appendChild(btn);
+                        list.appendChild(btn);
                     }
                 });
             });
@@ -165,21 +167,27 @@
         function loadChat() {
             if(unsub) unsub();
             unsub = onSnapshot(query(collection(db, "messages"), orderBy("time", "asc")), s => {
-                chatBox.innerHTML = "";
+                const box = document.getElementById('chatBox');
+                box.innerHTML = "";
                 s.forEach(d => {
                     const m = d.data();
                     if((m.to === user.email && m.from === target) || (m.from === user.email && m.to === target)) {
                         const div = document.createElement('div');
-                        div.className = `msg ${m.from === user.email ? 'msg-me' : 'msg-them'}`;
+                        div.className = `msg-bubble group ${m.from === user.email ? 'msg-me' : 'msg-remote'}`;
                         
-                        if(m.image) div.innerHTML = `<img src="${m.image}" onclick="showImg('${m.image}')" class="max-w-[200px] rounded cursor-pointer">`;
-                        else if(m.voice) div.innerHTML = `<audio controls src="${m.voice}" class="h-8 invert"></audio>`;
-                        else div.innerText = m.text;
+                        let content = "";
+                        if(m.image) content = `<img src="${m.image}" onclick="showImg('${m.image}')" class="max-w-[250px] border border-[var(--p)] rounded cursor-pointer">`;
+                        else if(m.voice) content = `<audio controls src="${m.voice}" class="h-8 invert"></audio>`;
+                        else content = `<div>${m.text}</div>`;
                         
-                        chatBox.appendChild(div);
+                        // Add Delete button only for Admin
+                        const delBtn = (user.email === ADMIN_EMAIL) ? `<button class="hidden group-hover:block text-red-500 text-[9px] mt-2 underline" onclick="deleteMsg('${d.id}')">PURGE_DATA</button>` : "";
+                        
+                        div.innerHTML = `<div class="text-[8px] opacity-30 mb-1 tracking-widest">${m.from.split('@')[0].toUpperCase()}</div>${content}${delBtn}`;
+                        box.appendChild(div);
                     }
                 });
-                chatBox.scrollTo(0, chatBox.scrollHeight);
+                box.scrollTo(0, box.scrollHeight);
             });
         }
 
@@ -197,12 +205,12 @@
                 img.src = reader.result;
                 img.onload = async () => {
                     const canv = document.createElement('canvas');
-                    const MAX = 600;
+                    const MAX = 800;
                     let w = img.width, h = img.height;
                     if(w > MAX) { h *= MAX/w; w = MAX; }
                     canv.width = w; canv.height = h;
                     canv.getContext('2d').drawImage(img, 0, 0, w, h);
-                    await addDoc(collection(db, "messages"), { from: user.email, to: target, image: canv.toDataURL('image/jpeg', 0.6), time: serverTimestamp() });
+                    await addDoc(collection(db, "messages"), { from: user.email, to: target, image: canv.toDataURL('image/jpeg', 0.5), time: serverTimestamp() });
                 };
             };
             reader.readAsDataURL(file);
@@ -219,32 +227,26 @@
                 reader.readAsDataURL(blob);
                 reader.onloadend = async () => {
                     let audio = reader.result;
-                    // ADMIN VOICE CHANGE (Deep pitch logic)
-                    if(user.email === ADMIN_EMAIL) {
-                        const actx = new AudioContext();
-                        const abuf = await actx.decodeAudioData(await blob.arrayBuffer());
-                        const off = new OfflineAudioContext(abuf.numberOfChannels, abuf.length * 1.5, abuf.sampleRate);
-                        const src = off.createBufferSource();
-                        src.buffer = abuf;
-                        src.playbackRate.value = 0.75; // DEEP VOICE
-                        src.connect(off.destination);
-                        src.start();
-                        // Send modulated or flagged
-                    }
-                    await addDoc(collection(db, "messages"), { from: user.email, to: target, voice: audio, time: serverTimestamp() });
+                    // Note: Pitch shifting requires OfflineAudioContext for processing before upload
+                    await addDoc(collection(db, "messages"), { from: user.email, to: target, voice: audio, isMod: (user.email === ADMIN_EMAIL), time: serverTimestamp() });
                 };
             };
             mediaRecorder.start();
             recInd.classList.remove('hidden');
         };
 
-        window.stopVoice = () => { mediaRecorder.stop(); recInd.classList.add('hidden'); };
+        window.stopVoice = () => { if(mediaRecorder) mediaRecorder.stop(); recInd.classList.add('hidden'); };
+
+        window.deleteMsg = async (id) => { if(confirm("PURGE THIS DATA PERMANENTLY?")) await deleteDoc(doc(db, "messages", id)); };
+
         window.sendAlert = async () => {
-            const t = prompt("HUD ALERT TEXT:");
-            const s = prompt("SECONDS:", "5");
+            const t = prompt("INPUT GLOBAL ALERT TEXT:");
+            const s = prompt("DISPLAY TIME (SECONDS):", "5");
             if(t) await addDoc(collection(db, "alerts"), { text: ">>> " + t.toUpperCase() + " <<<", time: parseInt(s)*1000, timeStamp: serverTimestamp() });
         };
+
         window.showImg = s => { fullImg.src = s; imgOverlay.style.display = 'flex'; };
+
         window.cycleTheme = () => {
             const themes = ['theme-cyan', 'theme-green', 'theme-red'];
             document.body.classList.remove(...themes);

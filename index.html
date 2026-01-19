@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>UPLINK_OMEGA // V13.5</title>
+    <title>UPLINK_OMEGA // V14.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -17,93 +17,95 @@
             background-color: var(--bg); color: var(--p); 
             font-family: 'Share Tech Mono', monospace; 
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            font-size: 18px; /* Force larger base font */
+            font-size: 16px; /* Slightly smaller, more refined font */
         }
 
-        /* High Visibility Inputs */
+        /* Refined Inputs */
         .h-input { 
-            background: #111 !important; border: 3px solid #333 !important; color: var(--p) !important; 
-            padding: 20px !important; font-size: 20px !important; width: 100%; outline: none;
-            border-radius: 8px;
+            background: #0a0a0a !important; border: 2px solid #222 !important; color: var(--p) !important; 
+            padding: 14px !important; font-size: 16px !important; width: 100%; outline: none;
+            border-radius: 4px;
         }
-        .h-input:focus { border-color: var(--p) !important; box-shadow: 0 0 15px var(--p); }
+        .h-input:focus { border-color: var(--p) !important; }
 
         .h-btn { 
-            border: 2px solid var(--p); padding: 15px 30px; text-transform: uppercase; 
-            font-weight: 900; font-size: 18px; transition: 0.2s; cursor: pointer; 
-            background: transparent; color: var(--p); border-radius: 8px;
+            border: 1px solid var(--p); padding: 10px 20px; text-transform: uppercase; 
+            font-weight: bold; font-size: 14px; transition: 0.2s; cursor: pointer; 
+            background: transparent; color: var(--p);
         }
         .h-btn:hover { background: var(--p); color: #000; }
 
-        /* Big Readable Chat */
-        .msg-bubble { 
-            padding: 15px 20px; border-radius: 12px; max-width: 85%; 
-            font-size: 18px; line-height: 1.4; position: relative;
+        /* Broadcast Banner */
+        #broadcastBanner {
+            background: var(--p); color: #000; font-weight: 900;
+            padding: 8px; text-align: center; font-size: 12px;
+            letter-spacing: 2px; display: none;
         }
-        .msg-remote { background: #111; border: 2px solid #333; border-left: 6px solid var(--p); }
-        .msg-me { background: rgba(0,242,255,0.15); border: 2px solid var(--p); text-align: right; }
 
-        #chatBox::-webkit-scrollbar { width: 8px; }
-        #chatBox::-webkit-scrollbar-thumb { background: var(--p); border-radius: 10px; }
+        /* Balanced Chat Bubbles */
+        .msg-bubble { 
+            padding: 12px 16px; border-radius: 8px; max-width: 80%; 
+            font-size: 15px; line-height: 1.4; position: relative;
+        }
+        .msg-remote { background: #111; border: 1px solid #333; border-left: 4px solid var(--p); }
+        .msg-me { background: rgba(0,242,255,0.08); border: 1px solid var(--p); text-align: right; }
 
-        #imgOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 9999; align-items: center; justify-content: center; }
+        /* Scrollbar Styling */
+        #chatBox::-webkit-scrollbar { width: 4px; }
+        #chatBox::-webkit-scrollbar-thumb { background: var(--p); }
+
+        #imgOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center; }
         
         @media (max-width: 768px) {
-            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 85%; background: #000; transition: 0.4s ease-in-out; }
-            #sidebar.open { left: 0; border-right: 3px solid var(--p); }
+            #sidebar { position: fixed; left: -100%; top: 0; bottom: 0; z-index: 1000; width: 80%; background: #000; transition: 0.3s; }
+            #sidebar.open { left: 0; border-right: 2px solid var(--p); }
         }
     </style>
 </head>
 <body class="theme-cyan">
 
-    <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-full max-h-full shadow-2xl"></div>
+    <div id="broadcastBanner" class="animate-pulse">SYSTEM_ALERT: ALL_NODES_ENCRYPTED</div>
+    <div id="imgOverlay" onclick="this.style.display='none'"><img id="fullImg" class="max-w-full max-h-full"></div>
 
     <div id="authOverlay" class="fixed inset-0 bg-black z-[5000] flex items-center justify-center p-6">
-        <div class="border-4 border-[var(--p)] bg-black p-10 w-full max-w-lg shadow-[0_0_50px_rgba(0,0,0,1)]">
-            <h1 class="text-4xl font-black mb-10 text-center uppercase tracking-widest border-b-4 border-[var(--p)] pb-6">Access_Gate</h1>
-            <input id="email" type="email" placeholder="IDENTITY_EMAIL" class="h-input mb-6">
-            <input id="pass" type="password" placeholder="SECURITY_PASSKEY" class="h-input mb-10">
-            <button onclick="login()" class="w-full h-btn text-2xl py-6">Authorize_Session</button>
-            <div id="loginError" class="mt-6 text-red-500 text-center font-bold text-sm uppercase"></div>
+        <div class="border-2 border-[var(--p)] bg-black p-8 w-full max-w-md">
+            <h1 class="text-2xl font-bold mb-8 text-center uppercase tracking-widest border-b border-[var(--p)] pb-4">CORE_LOGIN</h1>
+            <input id="email" type="email" placeholder="EMAIL" class="h-input mb-4">
+            <input id="pass" type="password" placeholder="PASSKEY" class="h-input mb-8">
+            <button onclick="login()" class="w-full h-btn py-4">INITIALIZE</button>
+            <div id="loginError" class="mt-4 text-red-500 text-center text-xs uppercase"></div>
         </div>
     </div>
 
-    <div id="mainUI" class="flex-1 flex flex-col opacity-0 transition-opacity duration-700">
-        
-        <header class="p-5 border-b-4 border-[#111] bg-black flex justify-between items-center">
-            <div class="flex items-center gap-6">
-                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden text-3xl"><i class="fas fa-bars"></i></button>
-                <span class="font-black text-2xl tracking-tighter">UPLINK_OMEGA</span>
+    <div id="mainUI" class="flex-1 flex flex-col opacity-0 transition-opacity duration-500">
+        <header class="p-4 border-b-2 border-[#111] bg-black flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden text-2xl"><i class="fas fa-bars"></i></button>
+                <span class="font-bold tracking-widest text-lg">UPLINK_OMEGA</span>
             </div>
-            <div class="flex gap-4">
-                <button onclick="cycleTheme()" class="h-btn py-2 px-4 text-sm">Theme</button>
-                <button id="adminWipe" onclick="wipeChat()" class="h-btn py-2 px-4 text-sm border-red-600 text-red-600 hidden">Wipe</button>
+            <div class="flex gap-2">
+                <button onclick="cycleTheme()" class="h-btn py-1 px-3 text-[10px]">Theme</button>
+                <button id="adminBroadcast" onclick="sendBroadcast()" class="h-btn py-1 px-3 text-[10px] hidden border-yellow-500 text-yellow-500">Alert</button>
             </div>
         </header>
 
         <div class="flex-1 flex overflow-hidden">
-            <aside id="sidebar" class="w-80 border-r-4 border-[#111] flex flex-col bg-black">
-                <div class="p-6 border-b-2 border-[#111] text-xs font-bold opacity-50 uppercase tracking-widest">Connected_Nodes</div>
-                <div id="userList" class="flex-1 overflow-y-auto p-4 space-y-4"></div>
-                <div class="p-6 border-t-2 border-[#111]"><button onclick="logout()" class="opacity-40 text-sm hover:text-red-500 font-bold">/LOGOUT</button></div>
+            <aside id="sidebar" class="w-72 border-r-2 border-[#111] flex flex-col bg-black">
+                <div class="p-4 border-b border-[#111] text-[10px] opacity-40 uppercase">active_nodes</div>
+                <div id="userList" class="flex-1 overflow-y-auto p-2 space-y-2"></div>
+                <div class="p-4 border-t border-[#111]"><button onclick="logout()" class="opacity-30 text-xs">/terminate</button></div>
             </aside>
 
             <main class="flex-1 flex flex-col bg-[#050505]">
-                <div id="activeTargetName" class="p-3 text-center text-xs font-bold bg-[#0a0a0a] border-b border-[#111] opacity-60 uppercase">Node_Idle</div>
-                <div id="chatBox" class="flex-1 overflow-y-auto p-6 md:p-12 space-y-8"></div>
+                <div id="chatBox" class="flex-1 overflow-y-auto p-6 md:p-10 space-y-6"></div>
                 
-                <footer class="p-6 border-t-4 border-[#111] bg-black">
-                    <div id="recIndicator" class="hidden text-red-500 text-sm font-black mb-3 animate-pulse">● RECORDING_ENCRYPTED_VOICE...</div>
-                    <div class="flex gap-4 items-center">
-                        <label class="p-4 cursor-pointer opacity-70 hover:opacity-100 bg-[#111] border-2 border-[#222] rounded-lg">
-                            <i class="fas fa-image text-2xl"></i>
-                            <input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()">
-                        </label>
-                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="p-4 opacity-70 hover:opacity-100 bg-[#111] border-2 border-[#222] rounded-lg">
-                            <i class="fas fa-microphone text-2xl"></i>
-                        </button>
-                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="INPUT_COMMAND_HERE" class="flex-1 h-input">
-                        <button onclick="sendText()" class="h-btn px-10">Execute</button>
+                <footer class="p-4 border-t-2 border-[#111] bg-black">
+                    <div id="recIndicator" class="hidden text-red-500 text-[10px] mb-2 animate-pulse">● RECORDING_VOICE...</div>
+                    <div class="flex gap-3 items-center">
+                        <label class="p-3 cursor-pointer opacity-50 hover:opacity-100"><i class="fas fa-image text-xl"></i><input type="file" id="imgInput" class="hidden" accept="image/*" onchange="sendImage()"></label>
+                        <button onmousedown="startVoice()" onmouseup="stopVoice()" class="p-3 opacity-50 hover:opacity-100"><i class="fas fa-microphone text-xl"></i></button>
+                        <input id="msgInput" type="text" onkeypress="if(event.key==='Enter') sendText()" placeholder="Message..." class="flex-1 h-input">
+                        <button onclick="sendText()" class="h-btn">Send</button>
                     </div>
                 </footer>
             </main>
@@ -113,7 +115,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDIpEsJtVWkhE7_EtciRiULDS27FK1Xmk",
@@ -128,20 +130,13 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const col = collection(db, "uplink_v13_stable");
+        const bCol = collection(db, "broadcasts");
         const usersCol = collection(db, "active_users");
 
         let currentUser, activeTarget, isAdmin = false, mediaRecorder, audioChunks = [];
         const ADMIN_EMAIL = "mscmkn@mscmkn.com";
 
-        window.login = () => {
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('pass').value;
-            signInWithEmailAndPassword(auth, email, pass)
-                .catch(e => {
-                    document.getElementById('loginError').innerText = "ERROR: " + e.message;
-                });
-        };
-
+        window.login = () => signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('pass').value).catch(e => document.getElementById('loginError').innerText = e.message);
         window.logout = () => signOut(auth).then(() => location.reload());
 
         onAuthStateChanged(auth, async (user) => {
@@ -150,7 +145,16 @@
                 isAdmin = (user.email === ADMIN_EMAIL);
                 document.getElementById('authOverlay').style.display = 'none';
                 document.getElementById('mainUI').style.opacity = '1';
-                if(isAdmin) document.getElementById('adminWipe').classList.remove('hidden');
+                if(isAdmin) document.getElementById('adminBroadcast').classList.remove('hidden');
+
+                // Listen for Broadcasts
+                onSnapshot(query(bCol, orderBy("timestamp", "desc")), (snap) => {
+                    if(!snap.empty) {
+                        const banner = document.getElementById('broadcastBanner');
+                        banner.innerText = snap.docs[0].data().text;
+                        banner.style.display = 'block';
+                    }
+                });
 
                 await setDoc(doc(db, "active_users", user.uid), { email: user.email, lastActive: serverTimestamp() }, {merge: true});
                 if (isAdmin) loadSidebar(); else startChat(ADMIN_EMAIL);
@@ -165,8 +169,8 @@
                     const u = d.data().email;
                     if(u === ADMIN_EMAIL) return;
                     const div = document.createElement('div');
-                    div.className = `p-5 border-2 border-[#222] cursor-pointer rounded-lg text-lg font-bold hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black' : ''}`;
-                    div.innerText = "> " + u.toUpperCase();
+                    div.className = `p-3 border border-[#111] cursor-pointer hover:border-[var(--p)] ${activeTarget === u ? 'bg-[var(--p)] text-black font-bold' : ''}`;
+                    div.innerText = u.split('@')[0].toUpperCase();
                     div.onclick = () => { startChat(u); document.getElementById('sidebar').classList.remove('open'); };
                     list.appendChild(div);
                 });
@@ -176,7 +180,6 @@
         let chatUnsub = null;
         function startChat(target) {
             activeTarget = target;
-            document.getElementById('activeTargetName').innerText = "Connected_To: " + target;
             if(chatUnsub) chatUnsub();
             chatUnsub = onSnapshot(query(col, orderBy("timestamp", "asc")), (snap) => {
                 const box = document.getElementById('chatBox');
@@ -185,22 +188,20 @@
                     const d = dDoc.data();
                     if ((d.sender === currentUser.email && d.recipient === activeTarget) || (d.sender === activeTarget && d.recipient === currentUser.email)) {
                         const isMe = d.sender === currentUser.email;
-                        let content = "";
-                        if(d.image) content = `<img src="${d.image}" onclick="showFull('${d.image}')" class="max-w-xs border-4 border-[var(--p)] rounded-lg cursor-zoom-in">`;
-                        else if(d.voice) content = `<audio controls src="${d.voice}" class="mt-2 h-12 invert brightness-200"></audio>`;
-                        else content = `<div>${d.text}</div>`;
+                        let content = d.image ? `<img src="${d.image}" onclick="showFull('${d.image}')" class="max-w-xs border border-[var(--p)] rounded cursor-pointer">` : 
+                                      (d.voice ? `<audio controls src="${d.voice}" class="mt-1 h-8 invert"></audio>` : d.text);
                         
                         box.innerHTML += `
                             <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'}">
                                 <div class="msg-bubble ${isMe ? 'msg-me' : 'msg-remote'}">
-                                    <div class="text-[10px] opacity-50 mb-2 uppercase font-black tracking-widest">${d.sender.split('@')[0]}</div>
+                                    <div class="text-[9px] opacity-40 mb-1 uppercase">${d.sender.split('@')[0]}</div>
                                     ${content}
-                                    ${isAdmin ? `<div class="text-[10px] text-red-500 mt-3 font-bold cursor-pointer" onclick="delMsg('${dDoc.id}')">/PURGE_MESSAGE</div>` : ''}
                                 </div>
                             </div>`;
                     }
                 });
-                box.scrollTop = box.scrollHeight;
+                // AUTO-SCROLL FIX
+                setTimeout(() => { box.scrollTop = box.scrollHeight; }, 100);
             });
         }
 
@@ -211,22 +212,25 @@
             input.value = "";
         };
 
+        window.sendBroadcast = async () => {
+            const msg = prompt("ENTER SYSTEM BROADCAST:");
+            if(msg) await addDoc(bCol, { text: "ALERT: " + msg.toUpperCase(), timestamp: serverTimestamp() });
+        };
+
         window.sendImage = () => {
             const file = document.getElementById('imgInput').files[0];
-            if (!file) return;
             const reader = new FileReader();
             reader.onloadend = () => {
                 const img = new Image();
                 img.src = reader.result;
                 img.onload = async () => {
                     const canvas = document.createElement('canvas');
-                    const MAX = 1200;
+                    const MAX = 800;
                     let w = img.width, h = img.height;
                     if(w > MAX) { h *= MAX/w; w = MAX; }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    const data = canvas.toDataURL('image/jpeg', 0.6);
-                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, image: data, timestamp: serverTimestamp() });
+                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, image: canvas.toDataURL('image/jpeg', 0.5), timestamp: serverTimestamp() });
                 };
             };
             reader.readAsDataURL(file);
@@ -236,30 +240,23 @@
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
-            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
             mediaRecorder.onstop = () => {
-                const blob = new Blob(audioChunks, { type: 'audio/webm' });
                 const reader = new FileReader();
-                reader.readAsDataURL(blob);
-                reader.onloadend = async () => {
-                    await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp() });
-                };
+                reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/webm' }));
+                reader.onloadend = async () => await addDoc(col, { sender: currentUser.email, recipient: activeTarget, voice: reader.result, timestamp: serverTimestamp() });
             };
             mediaRecorder.start();
             document.getElementById('recIndicator').classList.remove('hidden');
         };
 
         window.stopVoice = () => { if(mediaRecorder) mediaRecorder.stop(); document.getElementById('recIndicator').classList.add('hidden'); };
-
-        const themes = ['theme-cyan', 'theme-green', 'theme-red'];
-        let tIdx = 0;
         window.cycleTheme = () => {
-            document.body.classList.remove(themes[tIdx]);
-            tIdx = (tIdx + 1) % themes.length;
-            document.body.classList.add(themes[tIdx]);
+            const themes = ['theme-cyan', 'theme-green', 'theme-red'];
+            document.body.classList.remove(themes[0], themes[1], themes[2]);
+            window.tIdx = ((window.tIdx || 0) + 1) % 3;
+            document.body.classList.add(themes[window.tIdx]);
         };
-
-        window.delMsg = async (id) => { if(confirm("PURGE THIS DATA?")) await deleteDoc(doc(db, "uplink_v13_stable", id)); };
         window.showFull = (s) => { document.getElementById('fullImg').src = s; document.getElementById('imgOverlay').style.display = 'flex'; };
     </script>
 </body>
